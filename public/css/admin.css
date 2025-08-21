@@ -1,0 +1,58 @@
+/*Default*/
+html, body{
+    margin:0;
+    padding:0;
+    height: vh;
+} 
+h1 h2 h3 h4{
+    margin:0;
+    padding:0;
+    text-decoration: none;
+}
+
+ul{
+    margin:none;
+    padding:none;
+    list-style: none ;
+}
+
+:root {
+    --primary: #1f0c35;
+    --secondary: #8f7f77;
+    --bgColor: #f1f1f1;
+  }
+
+/*Color Swatch*/
+*{
+    font-family: century-gothic, sans-serif;
+}
+
+.main header{
+    color:white;
+background-color: var(--primary);
+ 
+}
+
+.main{
+    display:grid;
+    grid-template-rows: 60px 1fr;
+    height: 100vh;
+
+}
+
+.main .hero{
+    display:grid;
+    grid-template-columns: 10% 1fr;
+    
+
+}
+.main .hero .sidebar{
+   
+   border-right: 1px solid black;
+   
+
+}
+.main .hero .heroframe{
+  padding: 0 2%;
+ 
+}

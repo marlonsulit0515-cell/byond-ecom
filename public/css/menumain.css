@@ -1,0 +1,19 @@
+.menuMain{
+    padding:1% 12%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.menuMain ul{
+    display: flex;
+    align-items: center;
+}
+
+.menuMain img{
+    height: 4rem;
+}
+
+.menuMain ul li{
+ font-size: 20px;;   
+ margin-left: 50px;
+}

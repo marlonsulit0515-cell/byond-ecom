@@ -1,0 +1,45 @@
+/*Default*/
+html, body{
+    margin:0;
+    padding:0;
+    height: vh;
+} 
+h1 h2 h3 h4{
+    margin:0;
+    padding:0;
+    text-decoration: none;
+}
+
+/*Color Swatch*/
+*{
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+:root {
+    --primary: #1f0c35;
+    --secondary: #8f7f77;
+    --bgColor: #f1f1f1;
+  }
+
+ul{
+    list-style: none;
+    margin: none;
+    
+}
+.headMain{
+    background-color: var(--primary);
+    display: flex;
+    justify-content: space-between;
+    padding:15px 10%;
+}
+.headMain ul {
+    display: flex;
+}
+
+.headMain ul li {
+   margin:0 5px;
+}
+
+.headMain ul li   img {
+   height: 20px;
+ }

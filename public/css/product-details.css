@@ -1,0 +1,255 @@
+/* Layout */
+.product-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    max-width: 1200px;
+    margin: 50px auto;
+    padding: 20px;
+}
+
+/* Image */
+.product-image img {
+    width: 100%;
+    max-height: 600px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/* Title & Price */
+.product-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+.product-price {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+.product-tax {
+    font-size: 0.9rem;
+    color: gray;
+    margin-bottom: 20px;
+}
+.discount-price { color: #e63946; font-weight: bold; }
+.original-price { color: #777; text-decoration: line-through; }
+.price { color: #2563eb; font-weight: bold; }
+
+/* Sections */
+.product-section {
+    margin: 20px 0;
+}
+.product-section h3 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+/* Sizes */
+.size-options {
+    display: flex;
+    gap: 10px;
+}
+.size-btn {
+    border: 1px solid #000;
+    padding: 10px 16px;
+    border-radius: 50px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.size-btn:hover {
+    background: #f5f5f5;
+}
+.size-btn.active {
+    background: black;
+    color: white;
+}
+.size-btn.disabled {
+    color: #aaa;
+    border-color: #ccc;
+    cursor: not-allowed;
+    background: #f8f8f8;
+}
+
+/* Quantity */
+.quantity-box {
+    display: flex;
+    align-items: center;
+    border: 1px solid black;
+    width: fit-content;
+}
+.qty-btn {
+    padding: 10px 15px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border: none;
+    background: white;
+}
+#quantity {
+    width: 50px;
+    text-align: center;
+    border: none;
+    font-size: 1rem;
+}
+
+/* Actions */
+.product-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 25px 0;
+}
+.btn-cart {
+    padding: 14px;
+    border: 1px solid black;
+    font-weight: bold;
+    background: white;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-cart:hover {
+    background: #f2f2f2;
+}
+.btn-buy {
+    padding: 14px;
+    background: #b91c1c;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-buy:hover {
+    background: #7f1d1d;
+}
+
+/* Notes */
+.product-note {
+    font-size: 0.9rem;
+    margin: 20px 0;
+    line-height: 1.5;
+}
+.image-thumbnails {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.thumbnail.active {
+    border-color: #007bff;
+}
+
+.thumbnail:hover {
+    border-color: #0056b3;
+}
+
+.size-btn {
+    position: relative;
+    margin: 5px;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.size-btn.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.size-btn.disabled {
+    background: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+.stock-info, .out-of-stock {
+    font-size: 10px;
+    display: block;
+}
+
+.stock-message {
+    margin-top: 10px;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.stock-message.available {
+    background: #d4edda;
+    color: #155724;
+}
+
+.stock-message.unavailable {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.stock-summary {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stock-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.stock-item {
+    padding: 5px 10px;
+    background: #e9ecef;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.stock-item.no-stock {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.total-stock {
+    font-weight: bold;
+    margin-top: 10px;
+}
+/* Accordion */
+details {
+    border-top: 1px solid #ddd;
+    padding: 10px 0;
+    cursor: pointer;
+}
+details summary {
+    font-weight: 600;
+    list-style: none;
+}
+details[open] summary {
+    color: #b91c1c;
+}
+details p {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .product-container {
+        grid-template-columns: 1fr;
+    }
+}

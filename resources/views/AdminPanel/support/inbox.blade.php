@@ -1,0 +1,9 @@
+<table>
+<thead>
+    <tr>
+        <th>Sender</th>
+        <th>Subject</th>
+        <th>Date</th>
+        <th>Message</th>
+    </tr>
+</table>
