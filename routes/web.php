@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShopController;
@@ -37,6 +38,17 @@ Route::get('/aboutus', function () {
 Route::get('/contact', function () {
     return view('contact');
 })->name('view.contact');
+
+//Routes for Blogs
+Route::get('/blog_content1', [HomeController::class, 'blog_content_one'])->name('content-one');
+Route::get('/blog_content2', [HomeController::class, 'blog_content_two'])->name('content-two');
+Route::get('/blog_content3', [HomeController::class, 'blog_content_three'])->name('content-three');
+Route::get('/blog_content4', [HomeController::class, 'blog_content_four'])->name('content-four');
+/*
+/*
+
+/*
+
 /*
 |--------------------------------------------------------------------------
 | Authentication Routes

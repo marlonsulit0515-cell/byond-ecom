@@ -101,7 +101,7 @@
             <li>
                 <p>LLorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam</p>
             </li> 
-            <li><a href="">READ MORE</a></li>
+            <li><a href="{{ url('/blog_content1') }}">READ MORE</a></li>
         </ul>
         
            <ul>
@@ -111,7 +111,7 @@
             <li>
                 <p>LLorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam</p>
             </li> 
-            <li><a href="">READ MORE</a></li>
+            <li><a href="{{ url('/blog_content2') }}">READ MORE</a></li>
         </ul>
            <ul>
             <li><img src="{{ asset('img/blog/BlogImg.png') }}" alt=""></li>
@@ -120,7 +120,7 @@
             <li>
                 <p>LLorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam</p>
             </li> 
-            <li><a href="">READ MORE</a></li>
+            <li><a href="{{ url('/blog_content3') }}">READ MORE</a></li>
         </ul>
           <ul>
             <li><img src="{{ asset('img/blog/BlogImg.png') }}" alt=""></li>
@@ -129,7 +129,7 @@
             <li>
                 <p>LLorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam</p>
             </li> 
-            <li><a href="">READ MORE</a></li>
+            <li><a href="{{ url('/blog_content4') }}">READ MORE</a></li>
         </ul>
         </div>
         
