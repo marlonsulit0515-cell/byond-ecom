@@ -16,21 +16,18 @@ class Admin
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
-    {
-        if (Auth::check()) 
-            {
-                if(Auth::user()->usertype === 'admin') 
-                    {
-                        return $next($request);
-                    }
+        {
+            $user = Auth::user();
 
-                else{
-                    Session::flush();
-                    return redirect()->route('login');
-                }
-            }
-            else{
+            if (!$user) {
                 return redirect()->route('login');
             }
-    }
+
+            if ($user->usertype !== 'admin') {
+                Auth::logout(); // safer than Session::flush()
+                return redirect()->route('login')->with('error', 'Access denied.');
+            }
+
+            return $next($request);
+        }
 }
