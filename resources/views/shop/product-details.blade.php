@@ -12,6 +12,12 @@
         
         <!-- Image Thumbnails -->
         <div class="image-thumbnails">
+            @if($product->model_image)
+                <img src="/product/{{ $product->model_image }}" 
+                     alt="Model view" 
+                     class="thumbnail"
+                     onclick="changeMainImage('/product/{{ $product->model_image }}', this)">
+            @endif
             @if($product->image)
                 <img src="/product/{{ $product->image }}" 
                      alt="Main view" 
@@ -29,12 +35,6 @@
                      alt="Close-up view" 
                      class="thumbnail"
                      onclick="changeMainImage('/product/{{ $product->closeup_image }}', this)">
-            @endif
-            @if($product->model_image)
-                <img src="/product/{{ $product->model_image }}" 
-                     alt="Model view" 
-                     class="thumbnail"
-                     onclick="changeMainImage('/product/{{ $product->model_image }}', this)">
             @endif
         </div>
     </div>
@@ -89,7 +89,6 @@
                     </button>
                 @endforeach
             </div>
-            <p id="stock-message" class="stock-message"></p>
         </div>
 
         <!-- Quantity with Stock Validation -->
@@ -117,15 +116,24 @@
                 
                 <button type="submit" class="btn-cart" id="add-to-cart-btn">Add to Cart</button>
             </form>
-
-            <form action="{{ route('cart-page', $product->id) }}" method="POST" id="buy-now-form">
-                @csrf
-                <input type="hidden" name="quantity" id="cart-quantity-buy" value="1">
-                <input type="hidden" name="size" id="selected-size-buy" value="{{ $firstAvailableSize }}">
-                <input type="hidden" name="price" value="{{ $product->discount_price && $product->discount_price > 0 ? $product->discount_price : $product->price }}">
-                <input type="hidden" name="buy_now" value="1">
-                <button type="submit" class="btn-buy" id="buy-now-btn">Buy it now</button>
-            </form>
+             @if(auth()->check())
+                {{-- Logged-in user → normal form submit --}}
+                <form action="{{ route('buy-now', $product->id) }}" method="POST" id="buy-now-form">
+                    @csrf
+                    <input type="hidden" name="quantity" id="cart-quantity-buy" value="1">
+                    <input type="hidden" name="size" id="selected-size-buy" value="{{ $firstAvailableSize }}">
+                    <input type="hidden" name="price" 
+                        value="{{ $product->discount_price && $product->discount_price > 0 ? $product->discount_price : $product->price }}">
+                    <input type="hidden" name="buy_now" value="1">
+                    <button type="submit" class="btn-buy" id="buy-now-btn">Buy it now</button>
+                </form>
+            @else
+                {{-- Guest → prevent submit, show login modal instead --}}
+                @guest
+                    <x-auth-modal />
+                <button type="button" class="btn-buy" id="buy-now-btn" onclick="showAuthModal()">Buy it now</button>
+                @endguest
+            @endif
         </div>
 
         <!-- Extra Info -->
@@ -149,5 +157,29 @@
 <script>
     let selectedSize = '{{ $firstAvailableSize }}';
     let maxStock = {{ $firstAvailableSize ? $sizes[$firstAvailableSize] : 1 }};
+
+     function showAuthModal() {
+        document.getElementById('authModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeAuthModal() {
+        document.getElementById('authModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal when clicking outside modal content
+    document.getElementById('authModal').addEventListener('click', function(e) {
+        if (e.target === this) closeAuthModal();
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeAuthModal();
+    });
+
+    // Make it globally accessible
+    window.showAuthModal = showAuthModal;
 </script>
+@stack('scripts')
 @endsection

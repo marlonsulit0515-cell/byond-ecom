@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
+use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Models\User;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -24,14 +27,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // If you need to validate login, you can do it here or use a custom request
-        // $request->validate([...]);
-
         Auth::attempt($request->only('email', 'password'));
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('userdash', absolute: false));
+        return redirect()->intended(route('home', absolute: false));
     }
 
     /**
@@ -46,5 +46,61 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/home');
+    }
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+            
+            // Remove this line when you're done debugging
+            // dd($googleUser);
+
+            $user = User::firstOrCreate(
+                ['email' => $googleUser->getEmail()],
+                [
+                    'name' => $googleUser->getName(),
+                    'password' => bcrypt(Str::random(16)),
+                    'email_verified_at' => now(),
+                ]
+            );
+
+            Auth::login($user, true); // true = remember me
+
+            return redirect()->intended(route('home', absolute: false));
+            
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error('Google OAuth Error: ' . $e->getMessage());
+            
+            return redirect()->route('login')->with('error', 'Something went wrong with Google authentication. Please try again.');
+        }
+    }
+
+    public function redirectToFacebook(): RedirectResponse
+    {
+        return Socialite::driver('facebook')->redirect();
+    }
+
+    public function handleFacebookCallback()
+    {
+        $facebookUser = Socialite::driver('facebook')->user();
+
+        $user = User::firstOrCreate(
+            ['email' => $facebookUser->getEmail()],
+            [
+                'name' => $facebookUser->getName(),
+                'password' => bcrypt(Str::random(16)),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        Auth::login($user);
+
+        return redirect()->intended(route('home', absolute: false));
     }
 }

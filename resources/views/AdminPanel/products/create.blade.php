@@ -107,11 +107,6 @@
             </div>
         </div>
 
-        {{-- Total Quantity (optional override) --}}
-        <div>
-            <label class="block">Total Quantity (optional):</label>
-            <input type="number" name="quantity" min="0" value="{{ old('quantity') }}" class="border rounded p-2 w-full">
-        </div>
 
         <div>
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button>

@@ -62,7 +62,13 @@
                     {{-- Product image clickable to details --}}
                     <div class="image-container">
                         <a href="{{ url('product-details', $item->id) }}">
-                            <img src="{{ asset('product/' . $item->image) }}" alt="{{ $item->name }}">
+                            {{-- Default image --}}
+                            <img class="default-img" src="{{ asset('product/' . $item->image) }}" alt="{{ $item->name }}">
+                            
+                            {{-- Hover image (only show if exists) --}}
+                            @if($item->hover_image)
+                                <img class="hover-img" src="{{ asset('product/' . $item->hover_image) }}" alt="{{ $item->name }}">
+                            @endif
                         </a>
                     </div>
                     

@@ -1,8 +1,8 @@
  <div class="headMain">
      <ul>
-        <li><a href=""><img src="{{ asset('img/icons/FB_Icon.png') }}" alt=""></li>
-        <li><a href=""><img src="{{ asset('img/icons/IG_Icon.png') }}" alt=""></li>
-        <li><a href=""><img src="{{ asset('img/icons/Tiktok_Icon.png') }}" alt=""></li>
+        <li><a href="https://www.facebook.com/profile.php?id=61571159256828"><img src="{{ asset('img/icons/FB_Icon.png') }}" alt=""></li>
+        <li><a href="https://www.instagram.com/byondco.official/"><img src="{{ asset('img/icons/IG_Icon.png') }}" alt=""></li>
+        <li><a href="https://www.tiktok.com/@byondcoph"><img src="{{ asset('img/icons/Tiktok_Icon.png') }}" alt=""></li>
      </ul>
 
 <ul>
@@ -30,13 +30,9 @@
                 @if(Auth::user()->usertype === 'admin')
                     <a href="{{ route('admin.dashboard') }}" style="display:block; padding:8px;">Admin Dashboard</a>
                 @else
-                    <a href="{{ route('userdash') }}" style="display:block; padding:8px;">User Dashboard</a>
+                    <a href="{{ route('user.dashboard') }}" style="display:block; padding:8px;">User Dashboard</a>
                 @endif
-                <a href="{{ route('profile.edit') }}" style="display:block; padding:8px;">Profile</a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" style="width:100%; text-align:left; padding:8px; border:none; background:none;">Logout</button>
-                </form>
+                <a href="{{ url('/profile') }}" style="display:block; padding:8px;">Profile</a>
             </div>
         </li>
     @endguest

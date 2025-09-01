@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Order;
 class AdminController extends Controller
 {
     public function index()
@@ -177,30 +178,39 @@ class AdminController extends Controller
 
             return redirect()->back()->with('success', 'Product updated successfully!');
         }
-
-        // Optional: Add a method to handle individual image deletion
-        public function delete_product_image($id, $imageType, Request $request)
+        public function delete_product($id)
         {
             $product = Product::findOrFail($id);
-            
-            // Validate image type
-            $allowedTypes = ['image', 'hover_image', 'closeup_image', 'model_image'];
-            if (!in_array($imageType, $allowedTypes)) {
-                return redirect()->back()->with('error', 'Invalid image type.');
-            }
 
-            // Delete the image file and update database
-            if ($product->$imageType && file_exists(public_path('product/' . $product->$imageType))) {
-                unlink(public_path('product/' . $product->$imageType));
-                $product->$imageType = null;
-                $product->save();
-                
-                return redirect()->back()->with('success', ucfirst(str_replace('_', ' ', $imageType)) . ' deleted successfully!');
+            // Delete all related images if they exist
+            foreach (['image', 'hover_image', 'closeup_image', 'model_image'] as $field) {
+                if ($product->$field && file_exists(public_path('product/' . $product->$field))) {
+                    unlink(public_path('product/' . $product->$field));
+                }
             }
+            $product->delete();
 
-            return redirect()->back()->with('error', 'Image not found.');
+            return redirect()->back()->with('success', 'Product deleted successfully!');
         }
 
-        
- 
+        public function view_orders()
+        {
+            $orders = Order::with('items', 'payment')->latest()->paginate(10);
+            return view('AdminPanel.orders.index', compact('orders'));
+        }
+         public function show($id)
+        {
+            $order = Order::with('items', 'payment')->findOrFail($id);
+            return view('AdminPanel.orders.status', compact('order'));
+        }
+
+        public function updateStatus(Request $request, $id)
+        {
+            $order = Order::findOrFail($id);
+            $order->status = $request->status;
+            $order->save();
+
+            return back()->with('success', 'Order status updated.');
+        }
+
 }

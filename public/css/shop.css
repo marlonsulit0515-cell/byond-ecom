@@ -117,3 +117,28 @@
   text-decoration: line-through;
   margin-top: -4px;
 }
+.image-container {
+    position: relative;
+    display: inline-block;
+}
+
+.image-container img {
+    display: block;
+    width: 100%;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.image-container .hover-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+}
+
+.image-container:hover .default-img {
+    opacity: 0;
+}
+
+.image-container:hover .hover-img {
+    opacity: 1;
+}

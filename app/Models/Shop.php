@@ -3,7 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class shop extends Model
+class Shop extends Model
 {
     // If you're mass assigning
     protected $fillable = [

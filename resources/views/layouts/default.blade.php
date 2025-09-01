@@ -10,6 +10,7 @@
     <link href="{{ asset('css/footer.css') }}" rel="stylesheet" />
     <link href="{{ asset('css/slideshow.css') }}" rel="stylesheet" />
     <link rel="stylesheet" href="https://use.typekit.net/oov2wcw.css">
+    <link rel="icon" type="image/png" href="{{ asset('img/logo/ByondLogo-BW.png') }}">
     
  </head>
  <body>

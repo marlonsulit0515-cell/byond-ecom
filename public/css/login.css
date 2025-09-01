@@ -1,84 +1,208 @@
-body, html{
+body, html {
     margin:0;
     padding: 0; 
 }
 
- 
-
-ul{
+ul {
     list-style: none;
     margin: 0;
     padding: 0;
+}
+
+* {
+    font-family: century-gothic, sans-serif;
 }
 
 .login-hero {
     height: 100vh;
     display: grid;
     grid-template-rows: 30px 1fr;
-    
-}
-
-*{
-     font-family: century-gothic, sans-serif;
-}
-
-.login-hero .login-cont img{
-    position: absolute;
-    margin: 0;
-    left: 50%;
-    top: 15%;
-    width: 300px;
-    -ms-transform: translate(-50%, -50%);
-    transform: translate(-50%, -15%);
 }
 
 .login-hero .login-head {
-background-color: #1F0C35 ;
+    background-color: #1F0C35;
 }
 
-.login-hero .form-login{ 
-     box-shadow: 5px 10px 12px #888888;
-  margin: 0;
-  width: 20%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  -ms-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
-  background-color: #F5F5F5;
-  padding: 2%;
+.login-hero .login-cont img {
+    position: absolute;
+    left: 50%;
+    top: 15%;
+    width: 300px;
+    transform: translate(-50%, -15%);
 }
-.login-hero .form-login .rememberme{
-    display: flex
-;
+
+.login-hero .form-login {
+    box-shadow: 5px 10px 12px #888888;
+    margin: 0;
+    width: 20%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #F5F5F5;
+    padding: 2%;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.login-hero .form-login h2 {
+    margin-bottom: 15px;
+    color: #1F0C35;
+}
+
+.login-hero .form-login .input-cont {
+    padding: 10px 0;
+}
+
+.login-hero .form-login .input-cont input {
+    margin: 5px 0;
+    padding: 10px;
+    width: 100%;
+    border: solid 1px #D6D6D6;
+    border-radius: 5px;
+}
+
+.login-hero .form-login .rememberme {
+    display: flex;
     justify-content: space-between;
-    align-items: self-end;
+    align-items: center;
     padding: 15px 0;
     font-size: 11px;
     color: black;
 }
 
-.login-hero .form-login .input-cont{
-    padding:10px 0;
-}
-
-.login-hero .form-login .input-cont input{
-    margin:5px 0;
-    padding: 10px;
-    width:100%;
-    border: solid 1px #D6D6D6;
-}
-
-.login-hero .form-login .action{
-       display: flex;
+.login-hero .form-login .action {
+    display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.login-hero .form-login .action li button{
-    background-color: #565B7A ;
+.login-hero .form-login .action li button {
+    background-color: #565B7A;
     color: white;
     border: none;
     padding: 10px 50px;
     cursor: pointer;
+    border-radius: 5px;
+}
+
+.login-hero .form-login .action li a {
+    font-size: 13px;
+    text-decoration: none;
+    color: #1F0C35;
+}
+
+/* Divider */
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #777;
+    margin: 15px 0;
+    font-size: 12px;
+}
+.divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #D6D6D6;
+}
+.divider:not(:empty)::before {
+    margin-right: .5em;
+}
+.divider:not(:empty)::after {
+    margin-left: .5em;
+}
+
+/* Social login buttons */
+.social-login {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.social-login a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background .3s;
+}
+
+/* Google Button Animation */
+.google-btn {
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    color: #444;
+    border: 1px solid #D6D6D6;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1;
+    transition: color 0.4s ease;
+}
+
+.google-btn::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, #4285F4, #34A853, #FBBC05, #EA4335);
+    opacity: 0;
+    transition: opacity 1s ease;
+    z-index: -1;
+}
+
+.google-btn:hover::before {
+    opacity: 1;
+}
+
+.google-btn:hover {
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+}
+
+/* Facebook Button Animation */
+.facebook-btn {
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    color: #444;
+    border: 1px solid #D6D6D6;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1;
+    transition: color 0.4s ease;
+}
+
+.facebook-btn::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #1877F2, #42A5F5, #166FE5, #0D47A1);
+    opacity: 0;
+    transition: opacity 1s ease;
+    z-index: -1;
+}
+
+.facebook-btn:hover::before {
+    opacity: 1;
+}
+
+.facebook-btn:hover {
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 14px rgba(24, 119, 242, 0.3);
+}
+
+.social-login i {
+    margin-right: 8px;
+    font-size: 16px;
 }

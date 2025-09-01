@@ -3,45 +3,38 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Order extends Model
 {
-    protected $fillable = [
-        'order_number', 'user_id', 'status', 'total_amount', 'tax_amount',
-        'shipping_amount', 'billing_address', 'shipping_address',
-        'payment_status', 'payment_method', 'notes', 'shipped_at', 'delivered_at'
+    use HasFactory;
+     protected $fillable = [
+        'user_id', 'email', 'order_number', 'status', 'total',
+        'full_name', 'phone', 'country', 'province', 'city', 'barangay',
+        'postal_code', 'billing_address', 'delivery_option',
+        'same_as_billing', 'shipping_address',
     ];
 
     protected $casts = [
-        'billing_address' => 'array',
-        'shipping_address' => 'array',
-        'total_amount' => 'decimal:2',
-        'tax_amount' => 'decimal:2',
-        'shipping_amount' => 'decimal:2',
-        'shipped_at' => 'datetime',
-        'delivered_at' => 'datetime',
+        'same_as_billing' => 'boolean',
+        'total' => 'decimal:2'
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
-        
-        static::creating(function ($order) {
-            if (empty($order->order_number)) {
-                $order->order_number = 'ORD-' . strtoupper(uniqid());
-            }
-        });
-    }
-
-    public function user(): BelongsTo
+    // Relationship with User (for registered customers)
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function items(): HasMany
+    // Relationship with OrderItems
+    public function items()
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    // Relationship with Payment
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
 }
+
