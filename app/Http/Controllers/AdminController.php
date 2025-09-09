@@ -156,7 +156,7 @@ class AdminController extends Controller
             // Update category (get category name like in store_product)
             if ($request->category) {
                 $category = Category::findOrFail($request->category);
-                $product->category = $category->category_name; // Store the name instead of ID
+                $product->category = $category->category_name;
             }
 
             // Handle image uploads for all image types (same logic as store_product)

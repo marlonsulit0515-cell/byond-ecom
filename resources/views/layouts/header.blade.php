@@ -1,9 +1,22 @@
  <div class="headMain">
      <ul>
-        <li><a href="https://www.facebook.com/profile.php?id=61571159256828"><img src="{{ asset('img/icons/FB_Icon.png') }}" alt=""></li>
-        <li><a href="https://www.instagram.com/byondco.official/"><img src="{{ asset('img/icons/IG_Icon.png') }}" alt=""></li>
-        <li><a href="https://www.tiktok.com/@byondcoph"><img src="{{ asset('img/icons/Tiktok_Icon.png') }}" alt=""></li>
-     </ul>
+    <li>
+        <a href="https://www.facebook.com/profile.php?id=61571159256828" target="_blank" rel="noopener noreferrer">
+            <img src="{{ asset('img/icons/FB_Icon.png') }}" alt="Facebook">
+        </a>
+    </li>
+    <li>
+        <a href="https://www.instagram.com/byondco.official/" target="_blank" rel="noopener noreferrer">
+            <img src="{{ asset('img/icons/IG_Icon.png') }}" alt="Instagram">
+        </a>
+    </li>
+    <li>
+        <a href="https://www.tiktok.com/@byondcoph" target="_blank" rel="noopener noreferrer">
+            <img src="{{ asset('img/icons/Tiktok_Icon.png') }}" alt="TikTok">
+        </a>
+    </li>
+</ul>
+
 
 <ul>
     <li class="search-box">
@@ -32,7 +45,6 @@
                 @else
                     <a href="{{ route('user.dashboard') }}" style="display:block; padding:8px;">User Dashboard</a>
                 @endif
-                <a href="{{ url('/profile') }}" style="display:block; padding:8px;">Profile</a>
             </div>
         </li>
     @endguest

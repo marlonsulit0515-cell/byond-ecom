@@ -26,4 +26,8 @@ class Product extends Model
         'price',
         'discount_price',
     ];
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

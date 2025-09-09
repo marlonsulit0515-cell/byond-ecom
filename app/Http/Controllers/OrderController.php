@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\OrderStatusLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -16,8 +17,8 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::with(['user', 'items', 'payment'])
-            ->orderBy('created_at', 'desc');
+        // Start the query without default ordering
+        $query = Order::with(['user', 'items', 'payment']);
 
         // Filter by status if provided
         if ($request->filled('status')) {
@@ -29,24 +30,47 @@ class OrderController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                  ->orWhere('full_name', 'like', "%{$search}%")
-                  ->orWhere('guest_email', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($userQuery) use ($search) {
-                      $userQuery->where('email', 'like', "%{$search}%")
-                                ->orWhere('name', 'like', "%{$search}%");
-                  });
+                ->orWhere('full_name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhereHas('user', function($userQuery) use ($search) {
+                    $userQuery->where('email', 'like', "%{$search}%")
+                            ->orWhere('name', 'like', "%{$search}%");
+                });
             });
+        }
+
+        // Apply sorting - moved before pagination
+        switch ($request->sort) {
+            case 'total_asc':
+                $query->orderBy('total', 'asc');
+                break;
+            case 'total_desc':
+                $query->orderBy('total', 'desc');
+                break;
+            case 'date_asc':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'date_desc':
+                $query->orderBy('created_at', 'desc');
+                break;
+            default:
+                // Default to latest (newest first)
+                $query->orderBy('created_at', 'desc');
         }
 
         $orders = $query->paginate(15);
 
-        // Optimized: Get status counts in one query
+        // Global count (ignores filters)
+        $allOrdersCount = Order::count();
+
+        // Per-status counts
         $statusCounts = Order::select('status', DB::raw('count(*) as total'))
             ->groupBy('status')
             ->pluck('total', 'status')
+            ->map(fn($count) => (int) $count)
             ->toArray();
 
-        // Ensure all statuses are always present
+        // Ensure all statuses are present
         $statusCounts = array_merge([
             'pending' => 0,
             'processing' => 0,
@@ -55,8 +79,9 @@ class OrderController extends Controller
             'cancelled' => 0,
         ], $statusCounts);
 
-        return view('AdminPanel.orders.index', compact('orders', 'statusCounts'));
+        return view('AdminPanel.orders.index', compact('orders', 'statusCounts', 'allOrdersCount'));
     }
+
 
     /**
      * Display the specified order
@@ -90,22 +115,27 @@ class OrderController extends Controller
 
         $order->update(['status' => $newStatus]);
 
-        // Optional: record status history
-        /*
-        $order->statusHistory()->create([
-            'status' => $newStatus,
-            'notes' => $request->notes,
-            'updated_by' => auth()->id(),
+            // Log the change
+        OrderStatusLog::create([
+            'order_id' => $order->id,
+            'status'   => $newStatus,
+            'changed_at' => now(),
         ]);
-        */
 
-        // Return JSON for AJAX requests, redirect for regular requests
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'status' => $order->status,
                 'oldStatus' => $oldStatus,
                 'orderNumber' => $order->order_number,
+                'new_status_label' => ucfirst($order->status),
+                'status_counts' => [
+                    'pending'   => Order::where('status', 'pending')->count(),
+                    'processing'=> Order::where('status', 'processing')->count(),
+                    'shipped'   => Order::where('status', 'shipped')->count(),
+                    'completed' => Order::where('status', 'completed')->count(),
+                    'cancelled' => Order::where('status', 'cancelled')->count(),
+                ],
                 'message' => "Order status updated to {$newStatus}"
             ]);
         }
@@ -115,71 +145,60 @@ class OrderController extends Controller
             ->with('success', "Order status updated to {$newStatus}");
     }
 
-    /**
-     * Bulk update order statuses
-     */
     public function bulkUpdateStatus(Request $request)
-{
-    $request->validate([
-        'order_ids' => 'required|array',
-        'order_ids.*' => 'exists:orders,id',
-        'status' => 'required|in:pending,processing,shipped,completed,cancelled',
-    ]);
+    {
+        $request->validate([
+            'order_ids' => 'required|array',
+            'order_ids.*' => 'exists:orders,id',
+            'status' => 'required|in:pending,processing,shipped,completed,cancelled',
+        ]);
 
-    $orders = Order::whereIn('id', $request->order_ids)->get();
-    $updatedOrders = [];
+        $orders = Order::whereIn('id', $request->order_ids)->get();
+        $updatedOrders = [];
 
-    foreach ($orders as $order) {
-        $oldStatus = $order->status;
-        $newStatus = $request->status;
+        foreach ($orders as $order) {
+            $oldStatus = $order->status;
+            $newStatus = $request->status;
 
-        if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
-            $this->restoreStock($order);
-        } elseif ($oldStatus === 'cancelled' && $newStatus !== 'cancelled') {
-            $this->deductStock($order);
+            if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
+                $this->restoreStock($order);
+            } elseif ($oldStatus === 'cancelled' && $newStatus !== 'cancelled') {
+                $this->deductStock($order);
+            }
+
+            $order->update(['status' => $newStatus]);
+
+             // Log each order status change
+            OrderStatusLog::create([
+                'order_id' => $order->id,
+                'status'   => $newStatus,
+                'changed_at' => now(),
+            ]);
+
+            $updatedOrders[] = [
+                'id' => $order->id,
+                'status' => $order->status,
+                'order_number' => $order->order_number,
+                'oldStatus' => $oldStatus
+            ];
         }
 
-        $order->update(['status' => $newStatus]);
+        // Return JSON for AJAX requests, redirect for regular requests
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'updatedCount' => count($updatedOrders),
+                'updatedOrders' => $updatedOrders,
+                'newStatus' => $request->status,
+                'message' => count($request->order_ids) . " orders updated to {$request->status}"
+            ]);
+        }
 
-        $updatedOrders[] = [
-            'id' => $order->id,
-            'status' => $order->status,
-            'order_number' => $order->order_number,
-            'oldStatus' => $oldStatus
-        ];
-
-        /*
-        $order->statusHistory()->create([
-            'status' => $newStatus,
-            'notes' => 'Bulk status update',
-            'updated_by' => auth()->id(),
-        ]);
-        */
+        return redirect()
+            ->route('orders.index')
+            ->with('success', count($request->order_ids) . " orders updated to {$request->status}");
     }
 
-    // Return JSON for AJAX requests, redirect for regular requests
-    if ($request->expectsJson() || $request->ajax()) {
-        return response()->json([
-            'success' => true,
-            'updatedCount' => count($updatedOrders),
-            'updatedOrders' => $updatedOrders,
-            'newStatus' => $request->status,
-            'message' => count($request->order_ids) . " orders updated to {$request->status}"
-        ]);
-    }
-
-    return redirect()
-        ->route('orders.index')
-        ->with('success', count($request->order_ids) . " orders updated to {$request->status}");
-}
-
-// =============================================================================
-// ADD THESE NEW METHODS TO YOUR CONTROLLER
-// =============================================================================
-
-/**
- * Get updated status counts for dashboard stats
- */
 public function getStatusCounts()
 {
     $statusCounts = Order::select('status', DB::raw('count(*) as total'))
@@ -199,13 +218,7 @@ public function getStatusCounts()
     return response()->json(['statusCounts' => $statusCounts]);
 }
 
-// =============================================================================
-// USER CONTROLLER METHODS 
-// =============================================================================
 
-/**s
- * Mark order as received (shipped -> completed)
- */
 public function markReceived(Request $request, $orderId)
 {
     $order = Order::where('id', $orderId)
@@ -214,6 +227,8 @@ public function markReceived(Request $request, $orderId)
                   ->firstOrFail();
 
     $order->update(['status' => 'completed']);
+
+    
 
     // Optional: record status history
     /*
@@ -232,6 +247,7 @@ public function markReceived(Request $request, $orderId)
             'message' => 'Order marked as received successfully'
         ]);
     }
+    
 
     return redirect()
         ->route('user.orders')

@@ -12,23 +12,52 @@
         <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
             
             <!-- Header -->
-            <div class="flex justify-between items-center border-b p-6">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Order{{ $order->order_number }}</h1>
-                    <p class="text-gray-400 text-sm">Placed on {{ $order->created_at->format('F j, Y \a\t g:i A') }}</p>
-                </div>
-                <div class="text-right">
-                    <span class="px-4 py-2 text-sm font-semibold rounded-full 
-                        @if($order->status == 'pending') bg-yellow-100 text-yellow-800
-                        @elseif($order->status == 'processing') bg-blue-100 text-blue-800
-                        @elseif($order->status == 'shipped') bg-purple-100 text-purple-800
-                        @elseif($order->status == 'completed') bg-green-100 text-green-800
-                        @elseif($order->status == 'cancelled') bg-red-100 text-red-800
-                        @endif">
-                        {{ ucfirst($order->status) }}
-                    </span>
-                </div>
+        <div class="flex justify-between items-center border-b p-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Order {{ $order->order_number }}</h1>
+                <p class="text-gray-400 text-sm">Placed on {{ $order->created_at->format('F j, Y \a\t g:i A') }}</p>
             </div>
+            <div class="text-right">
+                <span class="px-4 py-2 text-sm font-semibold rounded-full 
+                    @if($order->status == 'pending') bg-yellow-100 text-yellow-800
+                    @elseif($order->status == 'processing') bg-blue-100 text-blue-800
+                    @elseif($order->status == 'shipped') bg-purple-100 text-purple-800
+                    @elseif($order->status == 'completed') bg-green-100 text-green-800
+                    @elseif($order->status == 'cancelled') bg-red-100 text-red-800
+                    @elseif($order->status == 'cancellation_requested') bg-orange-100 text-orange-800
+                    @endif">
+                    {{ ucfirst($order->status) }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Status History -->
+        <div class="p-6 border-b">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Order Status History</h2>
+            <div class="space-y-4">
+                @foreach($order->statusLogs->sortByDesc('changed_at') as $log)
+                    <div class="flex items-start space-x-3">
+                        <div class="w-3 h-3 rounded-full 
+                            @if($log->status == 'pending') bg-yellow-500
+                            @elseif($log->status == 'processing') bg-blue-500
+                            @elseif($log->status == 'shipped') bg-purple-500
+                            @elseif($log->status == 'completed') bg-green-500
+                            @elseif($log->status == 'cancelled') bg-red-500
+                            @elseif($log->status == 'cancellation_requested') bg-orange-500
+                            @else bg-gray-400
+                            @endif">
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">{{ ucfirst($log->status) }}</p>
+                            <p class="text-sm text-gray-600">
+                                {{ $log->changed_at->format('F j, Y g:i A') }}
+                            </p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
 
             <!-- Customer & Shipping Info -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border-b">
@@ -46,8 +75,10 @@
                 <div>
                     <h3>Payment</h3>
                     @if($order->payment)
+                        <p>Payer Name: {{ ucfirst($order->name ?? $order->user->name) }}</p>
                         <p>Method: {{ ucfirst($order->payment->method) }}</p>
                         <p>Status: {{ ucfirst($order->payment->status) }}</p>
+                        <p>Payment Date and Time: {{ $order->payment->created_at->format('F j, Y g:i A') }}</p>
                     @else
                         <p>No payment record yet.</p>
                     @endif
@@ -116,12 +147,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="bg-gray-50 border-t p-6 text-center text-sm text-gray-500">
-                <p>Thank you for your purchase!</p>
-                <p class="mt-1">If you have any questions, contact us at <a href="mailto:support@example.com" class="text-blue-600">support@example.com</a></p>
             </div>
         </div>
     </div>

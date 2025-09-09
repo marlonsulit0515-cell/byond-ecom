@@ -34,7 +34,7 @@ class UserController extends BaseController
             ->latest()
             ->get();
 
-        return view('UserPanel.userdash', compact('orders'));
+        return view('UserPanel.user-orders', compact('orders'));
     }
 
     // Your dashboard method (looks good)

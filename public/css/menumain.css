@@ -1,19 +1,98 @@
-.menuMain{
-    padding:1% 12%;
+/* Main menu container */
+.menuMain {
+    padding: 1% 12%;
     display: flex;
     justify-content: space-between;
-}
-
-.menuMain ul{
-    display: flex;
     align-items: center;
 }
 
-.menuMain img{
+/* Logo */
+.menuMain img {
     height: 4rem;
 }
 
-.menuMain ul li{
- font-size: 20px;;   
- margin-left: 50px;
+/* Navigation list */
+.menuMain ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 50px;
+}
+
+.menuMain ul li {
+    position: relative;
+    font-size: 20px;
+}
+
+/* Links */
+a {
+    text-decoration: none;
+    color: black;
+}
+
+a:hover {
+    color: rgb(5, 15, 146);
+}
+
+/* Shop link with arrow */
+.shop-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.shop-link::after {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid black;
+    transition: transform 0.3s ease;
+}
+
+/* Dropdown container */
+.dropdown ul {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 2px solid #1f0404;
+    border-radius: 5%;
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+    z-index: 1000;
+    min-width: 150px;
+}
+
+/* Dropdown items */
+.dropdown ul li {
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+}
+
+.dropdown ul li a {
+    display: block;
+    padding: 8px 15px;
+    color: black;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.dropdown ul li a:hover {
+    color: rgb(5, 15, 146);
+}
+
+/* Show dropdown when active */
+.dropdown.active ul {
+    display: block;
+}
+
+.dropdown.active .shop-link::after {
+    transform: rotate(180deg);
 }

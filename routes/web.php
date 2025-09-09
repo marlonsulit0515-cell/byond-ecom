@@ -68,6 +68,8 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
 
 //Menu Pages Routes
 Route::get('/shop-page', [HomeController::class, 'shop_menu'])->name('shop-page');
+Route::get('/shop-page/category/{category}', [HomeController::class, 'category_dropdown'])->name('shop-category');
+
 
 //Routes for Blogs
 Route::get('/blog_content1', [HomeController::class, 'blog_content_one'])->name('content-one');
@@ -101,7 +103,6 @@ Route::get('/My-Dashboard', [UserController::class, 'user_dashboard'])->name('us
 
 
     Route::get('/dashboard/orders', [UserController::class, 'myOrders'])->name('orders.dashboard');
-    Route::get('', [UserController::class,''])->name('dashboard.index');
 
 // In web.php
 Route::get('/user-dashboard', [UserController::class, 'dashboard'])
@@ -110,10 +111,6 @@ Route::get('/user-dashboard', [UserController::class, 'dashboard'])
 // Alternative route for dashboard (if you prefer /user/dashboard)
 Route::get('/user/dashboard', [UserController::class, 'dashboard'])
     ->name('user.dashboard.alt');
-
-// My Orders - Simple list
-Route::get('/my-orders', [UserController::class, 'myOrders'])
-    ->name('user.my-orders');
 
 // Orders with filtering and pagination
 Route::get('/user/orders', [UserController::class, 'orders'])
@@ -207,7 +204,7 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
-    Route::post('/orders/bulk-update', [OrderController::class, 'bulkUpdate'])->name('orders.bulk-update');
+    Route::post('/orders/bulk-update', [OrderController::class, 'bulkUpdateStatus'])->name('orders.bulk-update');
     Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
 });
 

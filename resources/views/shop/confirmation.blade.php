@@ -25,8 +25,8 @@
             <div class="order-box">
                 <h3>Shipping Information</h3>
                 <div class="order-row">
-                    <span>Full Name:</span>
-                    <span>{{ $order->name ?? $order->user->name }}</span>
+                    <span>Name:</span>
+                    <span>{{ $order->full_name ?? $order->user->full_name }}</span>
                 </div>
                 <div class="order-row">
                     <span>Country:</span>
@@ -84,8 +84,10 @@
             <div class="order-box">
                 <h3>Payment</h3>
                 @if($order->payment)
+                    <p><strong>Payer Name:</strong> {{ ucfirst($order->name ?? $order->user->name) }}</p>
                     <p><strong>Method:</strong> {{ ucfirst($order->payment->method) }}</p>
                     <p><strong>Status:</strong> {{ ucfirst($order->payment->status) }}</p>
+                    
                 @else
                     <p>No payment record yet.</p>
                 @endif
@@ -95,7 +97,7 @@
         <!-- Actions -->
         <div class="actions">
             <a href="{{ route('shop.more') }}" class="btn primary">Continue Shopping</a>
-            <a href="{{ route('view-my-orders') }}" class="btn secondary">View Orders</a>
+            <a href="{{ route('orders.dashboard') }}" class="btn secondary">View Orders</a>
         </div>
     </div>
 </div>

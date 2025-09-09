@@ -36,5 +36,9 @@ class Order extends Model
     {
         return $this->hasOne(Payment::class);
     }
+    public function statusLogs()
+    {
+        return $this->hasMany(OrderStatusLog::class);
+    }
 }
 

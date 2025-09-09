@@ -1,10 +1,11 @@
 @extends('layouts.default')
 @section('maincontent')
 <link href="{{ asset('css/shop.css') }}" rel="stylesheet" />
-<h1>Shop pages</h1>
+<h1>Shop Page</h1>
+@if(isset($category))
+    <h2>Category: {{ $category }}</h2>
+@endif
 <div class="product-main">
-        <h1>New Drops</h1>
-        
         <div class="product-item">
             {{-- Loop through products passed from ShopController --}}
             @foreach ($product as $item)
