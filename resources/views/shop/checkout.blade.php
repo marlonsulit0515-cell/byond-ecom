@@ -155,7 +155,6 @@
                         <a href="{{ route('view-cart') }}" class="btn-back">← Back to Cart</a>
 
                         <button type="submit" class="btn-place-order">Place Order</button>
-
                     </div>
                 </div>
             </div>

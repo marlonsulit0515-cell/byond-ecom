@@ -24,7 +24,7 @@ class Admin
             }
 
             if ($user->usertype !== 'admin') {
-                Auth::logout(); // safer than Session::flush()
+                Auth::logout();
                 return redirect()->route('login')->with('error', 'Access denied.');
             }
 

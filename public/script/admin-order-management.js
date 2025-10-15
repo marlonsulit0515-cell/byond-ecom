@@ -76,9 +76,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     /**
-     * ---------------------------
-     * BULK SELECTION FUNCTIONS
-     * ---------------------------
+        ---------------------------
+        BULK SELECTION FUNCTIONS
+        ---------------------------
      */
     function updateSelection() {
         const checkboxes = document.querySelectorAll('.order-checkbox:checked');
@@ -150,9 +150,9 @@ document.addEventListener('DOMContentLoaded', function() {
     window.toggleStatusMenu = toggleStatusMenu;
 
     /**
-     * ---------------------------
-     * BULK FORM VALIDATION
-     * ---------------------------
+        --------------------------
+         BULK FORM VALIDATION
+        ---------------------------
      */
     const bulkForm = document.getElementById('bulkForm');
     if (bulkForm) {

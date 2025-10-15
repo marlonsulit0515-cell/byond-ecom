@@ -12,7 +12,11 @@ class UserController extends BaseController
 {
     public function index()
     {
-        $product = Product::all(); // fetch all products
+        // Only select needed columns
+        $product = Product::select('id', 'name', 'price', 'discount_price', 'image', 'hover_image')
+                        ->limit(20)
+                        ->get();
+        
         return view('home', compact('product'));
     }
     public function user_dashboard()

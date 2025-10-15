@@ -1,93 +1,89 @@
 @extends('layouts.dashboard')
-<link href="{{ asset('css/admin-product-table.css') }}" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
 @section('maincontent')
-
-<h1 class="text-xl font-bold text-center">Products</h1>
-<a href="{{ route('admin.add-product') }}" class="add-product-link">Add New Product</a>
-
-<table class="store-table mx-auto border border-gray-300 shadow-lg w-full text-sm">
-    <thead class="bg-gray-100">
-        <tr>
-            <th class="p-2">Image</th>
-            <th class="p-2">Product Name</th>
-            <th class="p-2">Description</th>
-            <th class="p-2">Category</th>
-            <th class="p-2">Price</th>
-            <th class="p-2">Discount Price</th>
-            <th class="p-2">Stock (S)</th>
-            <th class="p-2">Stock (M)</th>
-            <th class="p-2">Stock (L)</th>
-            <th class="p-2">Stock (XL)</th>
-            <th class="p-2">Stock (2XL)</th>
-            <th class="p-2">Total Stock</th>
-            <th class="p-2">Edit</th>
-            <th class="p-2">Delete</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach ($product as $products)
-        <tr class="border-t">
-            <td class="p-2 text-center">
-                <!-- Main Thumbnail -->
-                <img src="/product/{{ $products->image }}" 
-                     alt="{{ $products->name }}" 
-                     class="clickable-image w-16 h-16 object-cover rounded cursor-pointer"
-                     data-product-name="{{ $products->name }}">
-
-                <!-- Hidden spans with all available images -->
-                <span class="product-images hidden">
-                    @if($products->image)<span data-src="/product/{{ $products->image }}" data-label="Main Image"></span>@endif
-                    @if($products->hover_image)<span data-src="/product/{{ $products->hover_image }}" data-label="Hover View"></span>@endif
-                    @if($products->closeup_image)<span data-src="/product/{{ $products->closeup_image }}" data-label="Close-up View"></span>@endif
-                    @if($products->model_image)<span data-src="/product/{{ $products->model_image }}" data-label="Model View"></span>@endif
-                </span>
-            </td>
-            <td class="p-2">{{ $products->name }}</td>
-            <td class="p-2">{{ Str::limit($products->description, 50) }}</td>
-            <td class="p-2">{{ $products->category }}</td>
-            <td class="p-2">₱{{ number_format($products->price, 2) }}</td>
-            <td class="p-2">
-                @if($products->discount_price)
-                    ₱{{ number_format($products->discount_price, 2) }}
-                @else
-                    -
-                @endif
-            </td>
-            <td class="p-2">{{ $products->stock_s ?? 0 }}</td>
-            <td class="p-2">{{ $products->stock_m ?? 0 }}</td>
-            <td class="p-2">{{ $products->stock_l ?? 0 }}</td>
-            <td class="p-2">{{ $products->stock_xl ?? 0 }}</td>
-            <td class="p-2">{{ $products->stock_2xl ?? 0 }}</td>
-            <td class="p-2 font-semibold">
-                {{ ($products->stock_s ?? 0) + ($products->stock_m ?? 0) + ($products->stock_l ?? 0) + ($products->stock_xl ?? 0) + ($products->stock_2xl ?? 0) }}
-            </td>
-            <td class="p-2">
-                <a class="btn btn-success px-2 py-1 rounded bg-green-500 text-white"
-                   href="{{ url('/update_product', $products->id) }}">
-                   Edit
-                </a>
-            </td>
-            <td class="p-2">
-                <a class="btn btn-danger px-2 py-1 rounded bg-red-500 text-white" 
-                   onclick="return confirm('Are you sure you want to delete this product?')" 
-                   href="{{ url('/delete_product', $products->id) }}">
-                   Delete
-                </a>
-            </td>
-        </tr>
-        @endforeach
-    </tbody>
-</table>
-
-<!-- Enhanced Modal Structure -->
-<div id="imageModal" class="image-modal">
-    <span id="closeBtn" class="image-modal-close">&times;</span>
-    <div class="modal-container">
-        <img id="modalImage" class="image-modal-content" />
-        <div id="imageLabel" class="image-label"></div>
+<!--Admin Table Displying Products-->
+<div class="p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-white"> Products</h1>
+        <a href="{{ route('admin.add-product') }}" 
+           class="px-4 py-2 rounded-lg bg-[#1f0c35] hover:bg-black text-white font-semibold shadow-md transition">
+            Add New Product
+        </a>
     </div>
-    <div id="prevBtn" class="nav-btn prev-btn">&#8249;</div>
-    <div id="nextBtn" class="nav-btn next-btn">&#8250;</div>
+
+    <div class="overflow-x-auto shadow-lg rounded-lg">
+        <table class="w-full border-collapse text-sm">
+            <thead class="bg-[#1f0c35] text-white uppercase text-xs tracking-wide">
+                <tr>
+                    <th class="p-3 text-left">Image</th>
+                    <th class="p-3 text-left">Product Name</th>
+                    <th class="p-3 text-left">Description</th>
+                    <th class="p-3 text-left">Category</th>
+                    <th class="p-3 text-left">Price</th>
+                    <th class="p-3 text-left">Discount</th>
+                    <th class="p-3 text-center">S</th>
+                    <th class="p-3 text-center">M</th>
+                    <th class="p-3 text-center">L</th>
+                    <th class="p-3 text-center">XL</th>
+                    <th class="p-3 text-center">2XL</th>
+                    <th class="p-3 text-center">Total</th>
+                    <th class="p-3 text-center">Edit</th>
+                    <th class="p-3 text-center">Delete</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @foreach ($product as $products)
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="p-3 text-center">
+                        <img src="/product/{{ $products->image }}" 
+                             alt="{{ $products->name }}" 
+                             class="clickable-image w-14 h-14 object-cover rounded-md border border-gray-300 cursor-pointer"
+                             data-product-name="{{ $products->name }}">
+                        <span class="product-images hidden">
+                            @if($products->image)<span data-src="/product/{{ $products->image }}" data-label="Main Image"></span>@endif
+                            @if($products->hover_image)<span data-src="/product/{{ $products->hover_image }}" data-label="Hover View"></span>@endif
+                            @if($products->closeup_image)<span data-src="/product/{{ $products->closeup_image }}" data-label="Close-up View"></span>@endif
+                            @if($products->model_image)<span data-src="/product/{{ $products->model_image }}" data-label="Model View"></span>@endif
+                        </span>
+                    </td>
+                    <td class="p-3 font-medium text-gray-900">{{ $products->name }}</td>
+                    <td class="p-3 text-gray-600">{{ Str::limit($products->description, 40) }}</td>
+                    <td class="p-3">{{ $products->category }}</td>
+                    <td class="p-3 font-semibold text-gray-900">₱{{ number_format($products->price, 2) }}</td>
+                    <td class="p-3 text-red-600">
+                        @if($products->discount_price)
+                            ₱{{ number_format($products->discount_price, 2) }}
+                        @else
+                            <span class="text-gray-400">—</span>
+                        @endif
+                    </td>
+                    <td class="p-3 text-center">{{ $products->stock_s ?? 0 }}</td>
+                    <td class="p-3 text-center">{{ $products->stock_m ?? 0 }}</td>
+                    <td class="p-3 text-center">{{ $products->stock_l ?? 0 }}</td>
+                    <td class="p-3 text-center">{{ $products->stock_xl ?? 0 }}</td>
+                    <td class="p-3 text-center">{{ $products->stock_2xl ?? 0 }}</td>
+                    <td class="p-3 text-center font-bold text-[#1f0c35]">
+                        {{ ($products->stock_s ?? 0) + ($products->stock_m ?? 0) + ($products->stock_l ?? 0) + ($products->stock_xl ?? 0) + ($products->stock_2xl ?? 0) }}
+                    </td>
+                    <td class="p-3 text-center">
+                        <a href="{{ url('/update_product', $products->id) }}" 
+                           class="px-3 py-1 rounded bg-green-600 hover:bg-green-700 text-white text-xs font-semibold shadow">
+                           Edit
+                        </a>
+                    </td>
+                    <td class="p-3 text-center">
+                        <a href="{{ url('/delete_product', $products->id) }}" 
+                           onclick="return confirm('Are you sure you want to delete this product?')" 
+                           class="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-xs font-semibold shadow">
+                           Delete
+                        </a>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Enhanced Modal Script -->

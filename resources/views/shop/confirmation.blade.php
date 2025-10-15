@@ -70,6 +70,7 @@
                     @foreach($order->items as $item)
                         <li>
                             {{ $item->product_name }} (x{{ $item->quantity }})
+                            {{ $item->size }}
                             <span>₱{{ number_format($item->total, 2) }}</span>
                         </li>
                     @endforeach

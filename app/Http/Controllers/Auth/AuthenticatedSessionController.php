@@ -80,27 +80,4 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('login')->with('error', 'Something went wrong with Google authentication. Please try again.');
         }
     }
-
-    public function redirectToFacebook(): RedirectResponse
-    {
-        return Socialite::driver('facebook')->redirect();
-    }
-
-    public function handleFacebookCallback()
-    {
-        $facebookUser = Socialite::driver('facebook')->user();
-
-        $user = User::firstOrCreate(
-            ['email' => $facebookUser->getEmail()],
-            [
-                'name' => $facebookUser->getName(),
-                'password' => bcrypt(Str::random(16)),
-                'email_verified_at' => now(),
-            ]
-        );
-
-        Auth::login($user);
-
-        return redirect()->intended(route('home', absolute: false));
-    }
 }

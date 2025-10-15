@@ -1,3 +1,1 @@
-<div class="dashheader">
-    <h2>ADMIN PANEL</h2>
-</div>
+<h2 class="text-xl font-semibold tracking-wide">ADMIN PANEL</h2>

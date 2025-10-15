@@ -1,49 +1,60 @@
-/* Main menu container */
-.menuMain {
+@media (min-width: 769px) {
+  /* Main menu container */
+  .menuMain {
     padding: 1% 12%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
+    background: #f4eedf;
+    font-family: 'Labor Union', sans-serif;
+  }
 
-/* Logo */
-.menuMain img {
+  /* Logo */
+  .menuMain img {
     height: 4rem;
-}
+  }
 
-/* Navigation list */
-.menuMain ul {
+  /* Hide mobile elements */
+  .menu-toggle,
+  .mobile-menu-parent,
+  .mobile-menu-child,
+  .sidebar-overlay {
+    display: none;
+  }
+
+  /* Navigation list */
+  .menuMain ul.desktop-menu {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
     align-items: center;
     gap: 50px;
-}
+  }
 
-.menuMain ul li {
+  .menuMain ul.desktop-menu li {
     position: relative;
     font-size: 20px;
-}
+  }
 
-/* Links */
-a {
+  /* Links */
+  .menuMain ul.desktop-menu a {
     text-decoration: none;
     color: black;
-}
+  }
 
-a:hover {
-    color: rgb(5, 15, 146);
-}
+  .menuMain ul.desktop-menu a:hover {
+    color: #762c21;
+  }
 
-/* Shop link with arrow */
-.shop-link {
+  /* Shop link with arrow */
+  .menuMain ul.desktop-menu .shop-link {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-}
+  }
 
-.shop-link::after {
+  .menuMain ul.desktop-menu .shop-link::after {
     content: '';
     width: 0;
     height: 0;
@@ -51,15 +62,15 @@ a:hover {
     border-right: 4px solid transparent;
     border-top: 5px solid black;
     transition: transform 0.3s ease;
-}
+  }
 
-/* Dropdown container */
-.dropdown ul {
+  /* Dropdown container */
+  .menuMain ul.desktop-menu .dropdown ul {
     display: none;
     position: absolute;
     top: 100%;
     left: 0;
-    background: white;
+    background: #f4eedf;
     border: 2px solid #1f0404;
     border-radius: 5%;
     list-style: none;
@@ -67,32 +78,33 @@ a:hover {
     padding: 8px 0;
     z-index: 1000;
     min-width: 150px;
-}
+  }
 
-/* Dropdown items */
-.dropdown ul li {
+  /* Dropdown items */
+  .menuMain ul.desktop-menu .dropdown ul li {
     margin: 0;
     padding: 0;
-    font-size: 16px;
-}
+    font-size: 12px;
+  }
 
-.dropdown ul li a {
+  .menuMain ul.desktop-menu .dropdown ul li a {
     display: block;
     padding: 8px 15px;
     color: black;
     white-space: nowrap;
     text-align: left;
-}
+  }
 
-.dropdown ul li a:hover {
+  .menuMain ul.desktop-menu .dropdown ul li a:hover {
     color: rgb(5, 15, 146);
-}
+  }
 
-/* Show dropdown when active */
-.dropdown.active ul {
+  /* Show dropdown when active */
+  .menuMain ul.desktop-menu .dropdown.active ul {
     display: block;
-}
+  }
 
-.dropdown.active .shop-link::after {
+  .menuMain ul.desktop-menu .dropdown.active .shop-link::after {
     transform: rotate(180deg);
+  }
 }

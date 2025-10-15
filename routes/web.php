@@ -28,7 +28,7 @@ Route::get('/', function () {
 
 // Landing page route
 Route::get('/home', function () {
-    $product = Product::all();
+    $product = Product::all(); //Display all products in the home page
     return view('home', compact('product'));
 })->name('home');
 
@@ -43,7 +43,7 @@ Route::get('/contact', function () {
 // Admin Dashboard (Closure Routes)
 Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function () {
     Route::get('/admin-dashboard', function () {
-        return view('AdminPanel.products.index');
+        return view('AdminPanel.AdminDash');
     })->name('admin.dashboard');
     
     Route::get('/products', function () {
@@ -86,9 +86,6 @@ Route::get('/blog_content4', [HomeController::class, 'blog_content_four'])->name
 
 Route::get('/auth/google', [AuthenticatedSessionController::class, 'redirectToGoogle'])->name('login.google');
 Route::get('/auth/google/callback', [AuthenticatedSessionController::class, 'handleGoogleCallback'])->name('google.callback');
-Route::get('/auth/facebook', [AuthenticatedSessionController::class, 'redirectToFacebook'])->name('facebook.login');
-Route::get('/auth/facebook/callback', [AuthenticatedSessionController::class, 'handleFacebookCallback'])->name('facebook.callback');
-
 
 
 /*
@@ -97,14 +94,13 @@ Route::get('/auth/facebook/callback', [AuthenticatedSessionController::class, 'h
 |--------------------------------------------------------------------------
 |
 */
-
+Route::middleware(['auth', \App\Http\Middleware\UserMiddleware::class])->group(function () {
 Route::get('/homepage', [UserController::class, 'index'])->name('userdash');
 Route::get('/My-Dashboard', [UserController::class, 'user_dashboard'])->name('user.dashboard.legacy');
 
 
-    Route::get('/dashboard/orders', [UserController::class, 'myOrders'])->name('orders.dashboard');
+Route::get('/dashboard/orders', [UserController::class, 'myOrders'])->name('orders.dashboard');
 
-// In web.php
 Route::get('/user-dashboard', [UserController::class, 'dashboard'])
     ->name('user.dashboard');
 
@@ -137,6 +133,7 @@ Route::post('/user/orders/{id}/cancel', [UserController::class, 'cancelOrder'])
 Route::post('/user/orders/{id}/confirm-delivery', [UserController::class, 'confirmDelivery'])
     ->name('user.order.confirm-delivery')
     ->where('id', '[0-9]+');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -179,7 +176,6 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
 */
 
 Route::get('/cart', [ShopController::class, 'cart_page'])->name('cart');
-Route::get('/home', [ShopController::class, 'shop_page'])->name('home');
 Route::get('/product-details/{id}', [ShopController::class, 'item_details'])->name('product-details');
 
 // Add to cart
@@ -187,12 +183,13 @@ Route::post('/add-to-cart/{id}', [ShopController::class, 'add_to_cart'])->name('
 Route::get('/view-cart', [ShopController::class, 'view_cart'])->name('view-cart');
 Route::post('/update-cart', [ShopController::class, 'update_cart'])->name('update-cart');
 Route::post('/remove-from-cart', [ShopController::class, 'remove_from_cart'])->name('remove-from-cart');
-
 Route::post('/buy-now/{id}', [ShopController::class, 'buy_now'])->name('buy-now');
+
+Route::middleware(['auth', \App\Http\Middleware\UserMiddleware::class])->group(function () {
 Route::get('/checkout', [ShopController::class, 'checkout_page'])->name('checkout_page');
 Route::get('/shop/confirmation/{orderNumber}', [ShopController::class, 'confirmation'])->name('shop.confirmation');
 Route::get('/shop-more', [ShopController::class, 'shop_more'])->name('shop.more');
-
+});
 /*
 |--------------------------------------------------------------------------
 | OrderController Routes
@@ -216,7 +213,6 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
 */
 
 Route::post('/checkout/process', [CheckoutController::class, 'checkout'])->name('checkout.process');
-
 // PayPal routes
 Route::get('/paypal/success', [CheckoutController::class, 'paypalSuccess'])->name('paypal.success');
 Route::get('/paypal/cancel', [CheckoutController::class, 'paypalCancel'])->name('paypal.cancel');

@@ -117,23 +117,20 @@
                 <button type="submit" class="btn-cart" id="add-to-cart-btn">Add to Cart</button>
             </form>
              @if(auth()->check())
-                {{-- Logged-in user → normal form submit --}}
                 <form action="{{ route('buy-now', $product->id) }}" method="POST" id="buy-now-form">
                     @csrf
-                    <input type="hidden" name="quantity" id="cart-quantity-buy" value="1">
-                    <input type="hidden" name="size" id="selected-size-buy" value="{{ $firstAvailableSize }}">
+                    <input type="hidden" name="quantity" id="buy-quantity" value="1">
+                    <input type="hidden" name="size" id="buy-size" value="{{ $firstAvailableSize }}">
                     <input type="hidden" name="price" 
                         value="{{ $product->discount_price && $product->discount_price > 0 ? $product->discount_price : $product->price }}">
                     <input type="hidden" name="buy_now" value="1">
-                    <button type="submit" class="btn-buy" id="buy-now-btn">Buy it now</button>
+                    <button type="submit" class="btn-buy">Buy it now</button>
                 </form>
             @else
-                {{-- Guest → prevent submit, show login modal instead --}}
-                @guest
-                    <x-auth-modal />
-                <button type="button" class="btn-buy" id="buy-now-btn" onclick="showAuthModal()">Buy it now</button>
-                @endguest
+                <x-auth-modal />
+                <button type="button" class="btn-buy" onclick="showAuthModal()">Buy it now</button>
             @endif
+
         </div>
 
         <!-- Extra Info -->

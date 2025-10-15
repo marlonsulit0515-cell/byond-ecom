@@ -1,14 +1,8 @@
 @extends('layouts.default')
 
 {{-- Custom CSS for items styling --}}
-<link href="{{ asset('css/shop.css') }}" rel="stylesheet" />
-
+<link href="{{ asset('css/product-card.css') }}" rel="stylesheet" />
 @section('maincontent')
-
-    {{-- ============================================
-         HERO SLIDESHOW SECTION
-         Auto-rotating image carousel with 3 slides
-         ============================================ --}}
     <div class="slideshow">
         <div class="slideshow-container">
             
@@ -40,48 +34,40 @@
             <span class="dot"></span>
         </div>
         
-        {{-- 
-            JavaScript for automatic slideshow functionality
-            - Auto-advances every 5 seconds
-            - Updates navigation dots to show current slide
-        --}}
     </div>
 
-    {{-- ============================================
-         NEW PRODUCTS SECTION
-         Displays featured products in a grid layout
-         ============================================ --}}
-    <div class="product-main">
-        <h1>New Drops</h1>
-        
-        <div class="product-item">
-            {{-- Loop through products passed from ShopController --}}
+    {{-- Product grid in home page --}}
+    <div class="mt-8 mb-12 mx-4 sm:mx-8 lg:mx-16 xl:mx-24">
+        <div class="grid gap-6 sm:gap-8 lg:gap-10 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
             @foreach ($product as $item)
-                <div class="itemCont">
-                    
-                    {{-- Product image clickable to details --}}
-                    <div class="image-container">
+                <div class="group block">
+                    <div class="relative overflow-hidden bg-gray-50">
                         <a href="{{ url('product-details', $item->id) }}">
-                            {{-- Default image --}}
-                            <img class="default-img" src="{{ asset('product/' . $item->image) }}" alt="{{ $item->name }}">
-                            
-                            {{-- Hover image (only show if exists) --}}
+                            <img class="default-img h-[200px] sm:h-[250px] lg:h-[280px] w-full object-contain transition duration-500 group-hover:scale-105" 
+                                 src="{{ asset('product/' . $item->image) }}" 
+                                 alt="{{ $item->name }}">
                             @if($item->hover_image)
-                                <img class="hover-img" src="{{ asset('product/' . $item->hover_image) }}" alt="{{ $item->name }}">
+                                <img class="hover-img absolute top-0 left-0 h-[200px] sm:h-[250px] lg:h-[280px] w-full object-contain opacity-0 transition-opacity duration-500 group-hover:opacity-100" 
+                                     src="{{ asset('product/' . $item->hover_image) }}" 
+                                     alt="{{ $item->name }}">
                             @endif
                         </a>
                     </div>
                     
-                    {{-- Product information and pricing --}}
-                    <div class="product-info">
-                        <h2 class="product-name">{{ $item->name }}</h2>
+                    <div class="relative bg-white pt-3">
+                        <h3 class="text-xs sm:text-sm text-gray-700 text-left uppercase tracking-wide group-hover:underline group-hover:underline-offset-4">
+                            {{ $item->name }}
+                        </h3>
                         
-                        {{-- Show discount price if available --}}
                         @if (!is_null($item->discount_price) && $item->discount_price > 0)
-                            <p class="discount-price">₱ {{ number_format($item->discount_price, 2) }}</p>
-                            <p class="original-price"><s>₱ {{ number_format($item->price, 2) }}</s></p>
+                            <div class="mt-2 flex items-center justify-start gap-2">
+                                <span class="text-sm tracking-wider text-black-600 font-bold">₱{{ number_format($item->discount_price, 2) }}</span>
+                                <span class="text-xs text-gray-400 line-through">₱{{ number_format($item->price, 2) }}</span>
+                            </div>
                         @else
-                            <p class="price">₱ {{ number_format($item->price, 2) }}</p>
+                            <p class="mt-2 text-left">
+                                <span class="text-sm tracking-wider text-gray-900 font-semibold">₱{{ number_format($item->price, 2) }}</span>
+                            </p>
                         @endif
                     </div>
                 </div>
@@ -89,10 +75,10 @@
         </div>
     </div>
 
-    {{-- ============================================
+    {{--
          LATEST BLOG PREVIEW SECTION
          Static preview of most recent blog post
-         ============================================ --}}
+         --}}
     <div class="latestblog">
         <h1>LATEST BLOG</h1> 
 
@@ -138,9 +124,6 @@
         
         
     </div>
-
-
-
         <script>
             let slideIndex = 0;
             showSlides();

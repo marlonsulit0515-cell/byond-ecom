@@ -12,18 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class ShopController extends Controller
 {
-    public function store(Request $request)
-    {
-        // Handle the request to store a product
-        // This method can be used for adding products to the cart or wishlist
-        // Implementation will depend on your application's requirements
-    }
-    
-    public function shop_page()
-    {
-        $product=Product::all();
-        return view('home', compact('product'));
-    }
+
 
     public function item_details($id)
     {   

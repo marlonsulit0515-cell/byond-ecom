@@ -5,16 +5,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const quantity = document.getElementById("quantity");
     const stockMessage = document.getElementById("stock-message");
     const addToCartBtn = document.getElementById("add-to-cart-btn");
-    const buyNowBtn = document.getElementById("buy-now-btn");
+    const buyNowBtn = document.querySelector(".btn-buy"); // Use class selector instead
     
     const hiddenQuantityInputs = [
         document.getElementById("cart-quantity"),
-        document.getElementById("cart-quantity-buy")
+        document.getElementById("buy-quantity") // Fixed ID
     ];
     
     const hiddenSizeInputs = [
         document.getElementById("selected-size"),
-        document.getElementById("selected-size-buy")
+        document.getElementById("buy-size") // Fixed ID
     ];
 
     // Helper functions
@@ -31,6 +31,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateStockMessage() {
+        if (!stockMessage) return;
+        
         if (maxStock > 0) {
             stockMessage.textContent = `${maxStock} units available for size ${selectedSize}`;
             stockMessage.className = 'stock-message available';
@@ -41,54 +43,66 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateActionButtons(stock) {
-        if (stock > 0) {
-            addToCartBtn.disabled = false;
-            buyNowBtn.disabled = false;
-            addToCartBtn.textContent = "Add to Cart";
-            buyNowBtn.textContent = "Buy it now";
-        } else {
-            addToCartBtn.disabled = true;
-            buyNowBtn.disabled = true;
-            addToCartBtn.textContent = "Out of Stock";
-            buyNowBtn.textContent = "Out of Stock";
+        // Only disable if stock is actually 0, not if stock is undefined
+        const isOutOfStock = stock <= 0;
+        
+        if (addToCartBtn) {
+            addToCartBtn.disabled = isOutOfStock;
+            addToCartBtn.textContent = isOutOfStock ? "Out of Stock" : "Add to Cart";
+        }
+        
+        // Only update Buy Now button if it's a submit button (logged in user)
+        // Guest users have onclick button, don't disable that
+        if (buyNowBtn && buyNowBtn.type === "submit") {
+            buyNowBtn.disabled = isOutOfStock;
+            buyNowBtn.textContent = isOutOfStock ? "Out of Stock" : "Buy it now";
         }
     }
 
     // Quantity controls
-    decrease.addEventListener("click", () => {
-        let val = parseInt(quantity.value);
-        if (val > 1) {
-            quantity.value = val - 1;
-            updateHiddenQuantities(val - 1);
-        }
-    });
+    if (decrease) {
+        decrease.addEventListener("click", () => {
+            let val = parseInt(quantity.value);
+            if (val > 1) {
+                quantity.value = val - 1;
+                updateHiddenQuantities(val - 1);
+            }
+        });
+    }
 
-    increase.addEventListener("click", () => {
-        let val = parseInt(quantity.value);
-        if (val < maxStock) {
-            quantity.value = val + 1;
-            updateHiddenQuantities(val + 1);
-        }
-    });
+    if (increase) {
+        increase.addEventListener("click", () => {
+            let val = parseInt(quantity.value);
+            if (val < maxStock) {
+                quantity.value = val + 1;
+                updateHiddenQuantities(val + 1);
+            }
+        });
+    }
 
-    quantity.addEventListener("input", () => {
-        let val = parseInt(quantity.value);
-        
-        // Ensure value is within bounds
-        if (val > maxStock) {
-            quantity.value = maxStock;
-            val = maxStock;
-        } else if (val < 1) {
-            quantity.value = 1;
-            val = 1;
-        }
-        
-        updateHiddenQuantities(val);
-    });
+    if (quantity) {
+        quantity.addEventListener("input", () => {
+            let val = parseInt(quantity.value);
+            
+            // Ensure value is within bounds
+            if (val > maxStock) {
+                quantity.value = maxStock;
+                val = maxStock;
+            } else if (val < 1 || isNaN(val)) {
+                quantity.value = 1;
+                val = 1;
+            }
+            
+            updateHiddenQuantities(val);
+        });
+    }
     
-    // Initialize stock message on page load
-    updateStockMessage();
-    updateActionButtons(maxStock);
+    // Initialize stock message and buttons on page load
+    // Only if maxStock is defined and valid
+    if (typeof maxStock !== 'undefined' && maxStock > 0) {
+        updateStockMessage();
+        updateActionButtons(maxStock);
+    }
 });
 
 // Global functions (called from HTML onclick events)
@@ -106,39 +120,49 @@ function selectSize(size, stock) {
     
     // Update quantity limits and reset if needed
     const quantityInput = document.getElementById("quantity");
-    quantityInput.max = stock;
-    
-    let currentQty = parseInt(quantityInput.value);
-    if (currentQty > stock) {
-        quantityInput.value = stock;
-        currentQty = stock;
+    if (quantityInput) {
+        quantityInput.max = stock;
+        
+        let currentQty = parseInt(quantityInput.value);
+        if (currentQty > stock || isNaN(currentQty)) {
+            quantityInput.value = Math.min(currentQty, stock);
+            currentQty = quantityInput.value;
+        }
+        
+        // Update all hidden inputs with correct IDs
+        const cartQty = document.getElementById("cart-quantity");
+        const buyQty = document.getElementById("buy-quantity"); // Fixed ID
+        const selectedSizeInput = document.getElementById("selected-size");
+        const selectedSizeBuyInput = document.getElementById("buy-size"); // Fixed ID
+        
+        if (cartQty) cartQty.value = currentQty;
+        if (buyQty) buyQty.value = currentQty;
+        if (selectedSizeInput) selectedSizeInput.value = size;
+        if (selectedSizeBuyInput) selectedSizeBuyInput.value = size;
     }
-    
-    // Update all hidden inputs
-    document.getElementById("cart-quantity").value = currentQty;
-    document.getElementById("cart-quantity-buy").value = currentQty;
-    document.getElementById("selected-size").value = size;
-    document.getElementById("selected-size-buy").value = size;
     
     // Update UI elements
     const stockMessage = document.getElementById("stock-message");
-    stockMessage.textContent = `${stock} units available for size ${size}`;
-    stockMessage.className = 'stock-message available';
+    if (stockMessage) {
+        stockMessage.textContent = `${stock} units available for size ${size}`;
+        stockMessage.className = 'stock-message available';
+    }
     
     // Update action buttons
     const addToCartBtn = document.getElementById("add-to-cart-btn");
-    const buyNowBtn = document.getElementById("buy-now-btn");
+    const buyNowBtn = document.querySelector(".btn-buy"); // Use class selector
     
-    if (stock > 0) {
-        addToCartBtn.disabled = false;
-        buyNowBtn.disabled = false;
-        addToCartBtn.textContent = "Add to Cart";
-        buyNowBtn.textContent = "Buy it now";
-    } else {
-        addToCartBtn.disabled = true;
-        buyNowBtn.disabled = true;
-        addToCartBtn.textContent = "Out of Stock";
-        buyNowBtn.textContent = "Out of Stock";
+    const isInStock = stock > 0;
+    
+    if (addToCartBtn) {
+        addToCartBtn.disabled = !isInStock;
+        addToCartBtn.textContent = isInStock ? "Add to Cart" : "Out of Stock";
+    }
+    
+    // Only disable submit-type Buy Now buttons
+    if (buyNowBtn && buyNowBtn.type === "submit") {
+        buyNowBtn.disabled = !isInStock;
+        buyNowBtn.textContent = isInStock ? "Buy it now" : "Out of Stock";
     }
 }
 

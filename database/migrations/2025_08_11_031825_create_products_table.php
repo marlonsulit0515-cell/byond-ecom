@@ -26,7 +26,7 @@ return new class extends Migration
             $table->integer('stock_2xl')->nullable();
             
             $table->integer('quantity')->nullable(); // optional: could be total of all sizes
-            $table->decimal('price')->nullable();
+            $table->decimal('price', 10, 2)->nullable();
             $table->decimal('discount_price')->nullable();
             $table->timestamps();
         });

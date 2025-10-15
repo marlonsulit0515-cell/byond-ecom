@@ -1,10 +1,10 @@
 <div class="footerMain">
 
 <ul class="link">
-    <li>FAQ</li>
-    <li>Shipping and Returns</li>
-    <li>Privacy Policy</li>
-    <li>Terms of Use</li>
+    <li><a href="#">FAQ</a></li>
+    <li><a href="#">Shipping and Returns</a></li>
+    <li><a href="#">Privacy Policy</a></li>
+    <li><a href="#">Terms of Use</a></li>
 </ul>
 
 <div class="copyright">
@@ -31,5 +31,4 @@
         </li>
      </ul>
 </div>
- 
 </div>

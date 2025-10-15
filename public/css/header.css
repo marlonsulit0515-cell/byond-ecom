@@ -1,37 +1,21 @@
-/*Default*/
-html, body{
-    margin:0;
-    padding:0;
-    height: vh;
-} 
-h1 h2 h3 h4{
-    margin:0;
-    padding:0;
-    text-decoration: none;
-}
-
-/*Color Swatch*/
-*{
-    font-family: Arial, Helvetica, sans-serif;
-}
-
 :root {
-    --primary: #1f0c35;
+    --primary: #762c21;
     --secondary: #8f7f77;
-    --bgColor: #f1f1f1;
-  }
+    --bgColor: #f4eedf;
+}
 
 ul{
     list-style: none;
     margin: none;
-    
 }
+
 .headMain{
     background-color: var(--primary);
     display: flex;
     justify-content: space-between;
     padding:15px 10%;
 }
+
 .headMain ul {
     display: flex;
 }
@@ -40,6 +24,57 @@ ul{
    margin:0 5px;
 }
 
-.headMain ul li   img {
+.headMain ul li img {
    height: 20px;
- }
+}
+
+/* Profile tooltip styles */
+.profile-link {
+    position: relative;
+}
+
+.profile-tooltip {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 50%;
+    transform: translateX(50%);
+    background: var(--bgColor);
+    color: #000;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.profile-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    right: 50%;
+    transform: translateX(50%);
+    border: 6px solid transparent;
+    border-bottom-color: var(--bgColor);
+}
+
+.profile-tooltip strong {
+    font-size: 14px;
+    display: block;
+    margin-bottom: 3px;
+    color: #000;
+}
+
+.profile-tooltip span {
+    font-size: 12px;
+    color: #333;
+}
+
+.profile-link:hover .profile-tooltip {
+    opacity: 1;
+    visibility: visible;
+}

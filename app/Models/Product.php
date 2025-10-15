@@ -30,4 +30,11 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function getFinalPriceAttribute()
+    {
+        return $this->discount_price && $this->discount_price > 0
+            ? $this->discount_price
+            : $this->price;
+    }
 }

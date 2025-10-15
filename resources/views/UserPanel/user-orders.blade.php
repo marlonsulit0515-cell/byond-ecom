@@ -2,145 +2,183 @@
 <link href="{{ asset('css/user-order.css') }}" rel="stylesheet" />
 
 @section('dashboard-content')
-<div class="dashboard-container">
-    <div class="dashboard-content">
-        <h1>My Orders</h1>
-            <div class="order-status-nav">
-                <a href="{{ route('user.orders', ['status' => 'all']) }}" 
-                class="status-link {{ request('status') == 'all' || !request('status') ? 'active' : '' }}">
-                All
-                </a>
-                <a href="{{ route('user.orders', ['status' => 'pending']) }}" 
-                class="status-link {{ request('status') == 'pending' ? 'active' : '' }}">
-                To Pay
-                </a>
-                <a href="{{ route('user.orders', ['status' => 'processing']) }}" 
-                class="status-link {{ request('status') == 'processing' ? 'active' : '' }}">
-                To Ship
-                </a>
-                <a href="{{ route('user.orders', ['status' => 'shipped']) }}" 
-                class="status-link {{ request('status') == 'shipped' ? 'active' : '' }}">
-                To Receive
-                </a>
-                <a href="{{ route('user.orders', ['status' => 'completed']) }}" 
-                class="status-link {{ request('status') == 'completed' ? 'active' : '' }}">
-                Completed
-                </a>
-                <a href="{{ route('user.orders', ['status' => 'cancelled']) }}" 
-                class="status-link {{ request('status') == 'cancelled' ? 'active' : '' }}">
-                Cancelled
-                </a>
-                <a href="{{ route('user.orders', ['status' => 'return_refund']) }}" 
-                class="status-link {{ request('status') == 'return_refund' ? 'active' : '' }}">
-                Return Refund
-                </a>
-            </div>
-        @forelse($orders as $order)
-            <div class="order-card">
-                <!-- Order Header -->
-                <div class="order-header">
-                    <div>
-                        <div class="order-number">Order #{{ $order->order_number }}</div>
-                        <div class="order-date">{{ $order->created_at->format('M d, Y - h:i A') }}</div>
-                    </div>
-                    <div class="status-badge 
-                        {{ $order->status == 'pending' ? 'status-pending' : '' }}
-                        {{ $order->status == 'completed' ? 'status-completed' : '' }}
-                        {{ $order->status == 'cancelled' ? 'status-cancelled' : '' }}
-                        {{ $order->status == 'processing' ? 'status-processing' : '' }}
-                    ">
-                        {{ ucfirst($order->status) }}
-                    </div>
-                </div>
+<!-- Page Header -->
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">My Orders</h1>
+    <p class="mt-1 text-sm text-gray-600">Track and manage your orders</p>
+</div>
 
-                <!-- Order Items -->
-                <div class="order-items">
-                    @foreach($order->items as $item)
-                        <div class="order-item">
-                            <img src="{{ asset('product/' . $item->product->image) }}" 
-                                 alt="{{ $item->product_name }}" 
-                                 class="product-image">
-                            
-                            <div class="product-details">
-                                <div class="product-name">{{ $item->product_name }}</div>
-                                <div class="product-specs">
-                                    <div class="spec-item">
-                                        <span class="spec-label">x</span> {{ $item->quantity }}
-                                    </div>
-                                    <div class="spec-item">
-                                        <span class="spec-label">Price:</span> ₱{{ number_format($item->price, 2) }}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="product-pricing">
-                                <div class="item-total">₱{{ number_format($item->total, 2) }}</div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-
-                <!-- Order Summary -->
-                <div class="order-summary">
-                    <div class="payment-info">
-                        <div><strong>Payment Method:</strong></div>
-                        <div class="payment-method">
-                            @if($order->payment)
-                                {{ ucfirst($order->payment->method) }} 
-                                <span class="payment-status">({{ ucfirst($order->payment->status) }})</span>
-                            @else
-                                <span style="color: #dc3545;">Not available</span>
-                            @endif
-                        </div>
-                    </div>
-                    
-                    <div class="order-total">
-                        <div class="total-label">Order Total</div>
-                        <div class="total-amount">₱{{ number_format($order->total, 2) }}</div>
-                    </div>
-                    
-                    <div class="order-actions">
-                        @if($order->status == 'pending')
-                        <button class="btn btn-outline order-action-btn" 
-                                data-id="{{ $order->id }}" 
-                                data-action="cancel">
-                            Cancel Order
-                        </button>
-                    @endif
-
-                    @if($order->status == 'processing')
-                        <button class="btn btn-outline">Contact Us</button>
-                    @endif
-
-                    <button class="btn btn-primary">View Details</button>
-
-                    @if($order->status == 'shipped')
-                        <button class="btn btn-outline">Contact Us</button>
-                        <button class="btn btn-outline order-action-btn" 
-                                data-id="{{ $order->id }}" 
-                                data-action="received">
-                            Order Received
-                        </button>
-                    @endif
-
-                    @if($order->status == 'completed')
-                        <button class="btn btn-outline">Buy Again</button>
-                    @endif
-                    </div>
-                </div>
-            </div>
-        @empty
-            <div class="empty-orders">
-                <span class="material-symbols-outlined">
-                    box
-                </span>
-                <div class="empty-orders-text">No orders yet</div>
-                <div class="empty-orders-subtext">When you place orders, they'll appear here</div>
-                <a href="{{ route('shop-page') }}" class="btn btn-primary" style="margin-top: 16px;">Start Shopping</a>
-            </div>
-        @endforelse
+<!-- Order Status Navigation -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 overflow-x-auto">
+    <div class="flex min-w-max">
+        <a href="{{ route('user.orders', ['status' => 'all']) }}" 
+           class="flex-1 px-6 py-4 text-center font-medium text-sm transition-colors duration-200 border-b-2
+           {{ request('status') == 'all' || !request('status') ? 'border-black text-black bg-gray-50' : 'border-transparent text-gray-600 hover:text-black hover:bg-gray-50' }}">
+            All
+        </a>
+        <a href="{{ route('user.orders', ['status' => 'pending']) }}" 
+           class="flex-1 px-6 py-4 text-center font-medium text-sm transition-colors duration-200 border-b-2
+           {{ request('status') == 'pending' ? 'border-black text-black bg-gray-50' : 'border-transparent text-gray-600 hover:text-black hover:bg-gray-50' }}">
+            To Pay
+        </a>
+        <a href="{{ route('user.orders', ['status' => 'processing']) }}" 
+           class="flex-1 px-6 py-4 text-center font-medium text-sm transition-colors duration-200 border-b-2
+           {{ request('status') == 'processing' ? 'border-black text-black bg-gray-50' : 'border-transparent text-gray-600 hover:text-black hover:bg-gray-50' }}">
+            To Ship
+        </a>
+        <a href="{{ route('user.orders', ['status' => 'shipped']) }}" 
+           class="flex-1 px-6 py-4 text-center font-medium text-sm transition-colors duration-200 border-b-2
+           {{ request('status') == 'shipped' ? 'border-black text-black bg-gray-50' : 'border-transparent text-gray-600 hover:text-black hover:bg-gray-50' }}">
+            To Receive
+        </a>
+        <a href="{{ route('user.orders', ['status' => 'completed']) }}" 
+           class="flex-1 px-6 py-4 text-center font-medium text-sm transition-colors duration-200 border-b-2
+           {{ request('status') == 'completed' ? 'border-black text-black bg-gray-50' : 'border-transparent text-gray-600 hover:text-black hover:bg-gray-50' }}">
+            Completed
+        </a>
+        <a href="{{ route('user.orders', ['status' => 'cancelled']) }}" 
+           class="flex-1 px-6 py-4 text-center font-medium text-sm transition-colors duration-200 border-b-2
+           {{ request('status') == 'cancelled' ? 'border-black text-black bg-gray-50' : 'border-transparent text-gray-600 hover:text-black hover:bg-gray-50' }}">
+            Cancelled
+        </a>
+        <a href="{{ route('user.orders', ['status' => 'return_refund']) }}" 
+           class="flex-1 px-6 py-4 text-center font-medium text-sm transition-colors duration-200 border-b-2
+           {{ request('status') == 'return_refund' ? 'border-black text-black bg-gray-50' : 'border-transparent text-gray-600 hover:text-black hover:bg-gray-50' }}">
+            Return/Refund
+        </a>
     </div>
 </div>
+
+<!-- Orders List -->
+<div class="space-y-4">
+    @forelse($orders as $order)
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+            <!-- Order Header -->
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="text-sm font-semibold text-gray-900">Order #{{ $order->order_number }}</span>
+                        <span class="text-sm text-gray-500">{{ $order->created_at->format('M d, Y - h:i A') }}</span>
+                    </div>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+                        {{ $order->status == 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                        {{ $order->status == 'completed' ? 'bg-green-100 text-green-800' : '' }}
+                        {{ $order->status == 'cancelled' ? 'bg-red-100 text-red-800' : '' }}
+                        {{ $order->status == 'processing' ? 'bg-blue-100 text-blue-800' : '' }}
+                        {{ $order->status == 'shipped' ? 'bg-purple-100 text-purple-800' : '' }}
+                    ">
+                        {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="divide-y divide-gray-100">
+                @foreach($order->items as $item)
+                    <div class="px-6 py-4 flex gap-4">
+                        <div class="flex-shrink-0">
+                            <img src="{{ asset('product/' . $item->product->image) }}" 
+                                 alt="{{ $item->product_name }}" 
+                                 class="w-20 h-20 object-cover rounded-lg border border-gray-200">
+                        </div>
+                        
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">{{ $item->product_name }}</h3>
+                            <div class="flex items-center gap-4 text-sm text-gray-600">
+                                <span>Qty: {{ $item->quantity }}</span>
+                                <span>₱{{ number_format($item->price, 2) }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-shrink-0 text-right">
+                            <div class="text-base font-semibold text-gray-900">₱{{ number_format($item->total, 2) }}</div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Order Footer -->
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <!-- Payment Info -->
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-gray-600">Payment:</span>
+                        @if($order->payment)
+                            <span class="font-medium text-gray-900">{{ ucfirst($order->payment->method) }}</span>
+                            <span class="text-gray-500">({{ ucfirst($order->payment->status) }})</span>
+                        @else
+                            <span class="text-red-600">Not available</span>
+                        @endif
+                    </div>
+
+                    <!-- Order Total -->
+                    <div class="flex items-center gap-6">
+                        <div class="text-right">
+                            <div class="text-xs text-gray-600 mb-1">Order Total</div>
+                            <div class="text-xl font-bold text-gray-900">₱{{ number_format($order->total, 2) }}</div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-2 flex-wrap">
+                            @if($order->status == 'pending')
+                                <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors order-action-btn" 
+                                        data-id="{{ $order->id }}" 
+                                        data-action="cancel">
+                                    Cancel Order
+                                </button>
+                            @endif
+
+                            @if($order->status == 'processing')
+                                <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                    Contact Us
+                                </button>
+                            @endif
+
+                            @if($order->status == 'shipped')
+                                <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                    Contact Us
+                                </button>
+                                <button class="px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition-colors order-action-btn" 
+                                        data-id="{{ $order->id }}" 
+                                        data-action="received">
+                                    Order Received
+                                </button>
+                            @endif
+
+                            @if($order->status == 'completed')
+                                <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                    Buy Again
+                                </button>
+                            @endif
+
+                            <button class="px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition-colors">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @empty
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+            <div class="max-w-md mx-auto">
+                <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">No orders yet</h3>
+                <p class="text-gray-600 mb-6">When you place orders, they'll appear here</p>
+                <a href="{{ route('shop-page') }}" 
+                   class="inline-flex items-center justify-center px-6 py-3 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors">
+                    Start Shopping
+                </a>
+            </div>
+        </div>
+    @endforelse
+</div>
+
 <script>
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('order-action-btn')) {
@@ -181,13 +219,8 @@ function handleUserOrderAction(orderId, action, event) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            const orderCard = button.closest('.order-card');
-            const statusBadge = orderCard.querySelector('.status-badge');
-            statusBadge.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
-            statusBadge.className = 'status-badge';
-            statusBadge.classList.add(`status-${data.status}`);
-            updateOrderActions(orderCard, data.status, orderId);
             showUserNotification(`Order #${data.orderNumber} ${action === 'received' ? 'marked as received' : 'cancelled'} successfully`, 'success');
+            setTimeout(() => window.location.reload(), 1000);
         } else {
             throw new Error(data.message || 'Action failed');
         }
@@ -202,55 +235,8 @@ function handleUserOrderAction(orderId, action, event) {
     });
 }
 
-// Optional: Auto-refresh order status (polls server every 30 seconds)
-// Uncomment if you want real-time updates without user action
-/*
-setInterval(function() {
-    // Only refresh if page is visible
-    if (!document.hidden) {
-        checkForOrderUpdates();
-    }
-}, 30000);
-
-function checkForOrderUpdates() {
-    const orderCards = document.querySelectorAll('.order-card');
-    const orderIds = Array.from(orderCards).map(card => {
-        return card.querySelector('.order-number').textContent.replace('Order #', '');
-    });
-    
-    if (orderIds.length === 0) return;
-    
-    fetch('/user/orders/check-updates', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({ order_ids: orderIds })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.updates && data.updates.length > 0) {
-            data.updates.forEach(update => {
-                const orderCard = document.querySelector(`.order-card:has(.order-number:contains("${update.order_number}"))`);
-                if (orderCard) {
-                    const statusBadge = orderCard.querySelector('.status-badge');
-                    if (statusBadge.textContent.toLowerCase() !== update.status) {
-                        // Status has changed
-                        statusBadge.textContent = update.status.charAt(0).toUpperCase() + update.status.slice(1);
-                        statusBadge.className = `status-badge status-${update.status}`;
-                        updateOrderActions(orderCard, update.status, update.id);
-                        showUserNotification(`Order #${update.order_number} status updated to ${update.status}`, 'info');
-                    }
-                }
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error checking order updates:', error);
-    });
+function showUserNotification(message, type) {
+    alert(message);
 }
-*/
 </script>
 @endsection
