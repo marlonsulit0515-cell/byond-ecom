@@ -17,8 +17,8 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        // Start the query without default ordering
-        $query = Order::with(['user', 'items', 'payment']);
+        
+        $query = Order::with(['user', 'items', 'payment']);//fetch data of user's items and payment
 
         // Filter by status if provided
         if ($request->filled('status')) {

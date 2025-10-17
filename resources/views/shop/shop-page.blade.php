@@ -2,7 +2,9 @@
 @section('maincontent')
 <link href="{{ asset('css/product-card.css') }}" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
-<h1>Shop Page</h1>
+<h1 class="text-2xl font-bold text-gray-800 mb-4">
+    {{ isset($category) ? $category : 'All Products' }}
+</h1>
 
 {{-- Top Bar with Sort + Filter --}}
 <div class="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-4 mb-6">

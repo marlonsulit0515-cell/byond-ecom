@@ -3,7 +3,7 @@
 {{-- Custom CSS for items styling --}}
 <link href="{{ asset('css/product-card.css') }}" rel="stylesheet" />
 @section('maincontent')
-    <div class="slideshow">
+    <div class="slideshow mb-12">
         <div class="slideshow-container">
             
             {{-- Slide 1 --}}
@@ -36,50 +36,192 @@
         
     </div>
 
-    {{-- Product grid in home page --}}
-    <div class="mt-8 mb-12 mx-4 sm:mx-8 lg:mx-16 xl:mx-24">
-        <div class="grid gap-6 sm:gap-8 lg:gap-10 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-            @foreach ($product as $item)
-                <div class="group block">
-                    <div class="relative overflow-hidden bg-gray-50">
-                        <a href="{{ url('product-details', $item->id) }}">
-                            <img class="default-img h-[200px] sm:h-[250px] lg:h-[280px] w-full object-contain transition duration-500 group-hover:scale-105" 
-                                 src="{{ asset('product/' . $item->image) }}" 
-                                 alt="{{ $item->name }}">
-                            @if($item->hover_image)
-                                <img class="hover-img absolute top-0 left-0 h-[200px] sm:h-[250px] lg:h-[280px] w-full object-contain opacity-0 transition-opacity duration-500 group-hover:opacity-100" 
-                                     src="{{ asset('product/' . $item->hover_image) }}" 
-                                     alt="{{ $item->name }}">
-                            @endif
-                        </a>
-                    </div>
-                    
-                    <div class="relative bg-white pt-3">
-                        <h3 class="text-xs sm:text-sm text-gray-700 text-left uppercase tracking-wide group-hover:underline group-hover:underline-offset-4">
-                            {{ $item->name }}
-                        </h3>
-                        
-                        @if (!is_null($item->discount_price) && $item->discount_price > 0)
-                            <div class="mt-2 flex items-center justify-start gap-2">
-                                <span class="text-sm tracking-wider text-black-600 font-bold">₱{{ number_format($item->discount_price, 2) }}</span>
-                                <span class="text-xs text-gray-400 line-through">₱{{ number_format($item->price, 2) }}</span>
-                            </div>
-                        @else
-                            <p class="mt-2 text-left">
-                                <span class="text-sm tracking-wider text-gray-900 font-semibold">₱{{ number_format($item->price, 2) }}</span>
-                            </p>
-                        @endif
-                    </div>
-                </div>
-            @endforeach     
-        </div>
+    <div class="mx-4 sm:mx-8 lg:mx-16 xl:mx-24">
+
+{{-- =======================
+    Recent Drops
+======================== --}}
+<section class="mb-16">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wide">
+            Recent Drops
+        </h2>
     </div>
+
+    <div class="grid gap-6 sm:gap-8 lg:gap-10 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-8">
+        @foreach ($recentProducts as $item)
+            {{-- Product card --}}
+            <div class="group block">
+                <div class="relative overflow-hidden bg-gray-50">
+                    <a href="{{ url('product-details', $item->id) }}">
+                        <img class="default-img h-[200px] sm:h-[250px] lg:h-[280px] w-full object-contain transition duration-500 group-hover:scale-105" 
+                             src="{{ asset('product/' . $item->image) }}" 
+                             alt="{{ $item->name }}">
+                        @if($item->hover_image)
+                            <img class="hover-img absolute top-0 left-0 h-[200px] sm:h-[250px] lg:h-[280px] w-full object-contain opacity-0 transition-opacity duration-500 group-hover:opacity-100" 
+                                 src="{{ asset('product/' . $item->hover_image) }}" 
+                                 alt="{{ $item->name }}">
+                        @endif
+                    </a>
+                </div>
+
+                <div class="relative bg-white pt-3">
+                    <h3 class="text-xs sm:text-sm text-gray-700 text-left uppercase tracking-wide group-hover:underline group-hover:underline-offset-4">
+                        {{ $item->name }}
+                    </h3>
+
+                    @if (!is_null($item->discount_price) && $item->discount_price > 0)
+                        <div class="mt-2 flex items-center justify-start gap-2">
+                            <span class="text-sm tracking-wider text-black font-bold">₱{{ number_format($item->discount_price, 2) }}</span>
+                            <span class="text-xs text-gray-400 line-through">₱{{ number_format($item->price, 2) }}</span>
+                        </div>
+                    @else
+                        <p class="mt-2 text-left">
+                            <span class="text-sm tracking-wider text-gray-900 font-semibold">₱{{ number_format($item->price, 2) }}</span>
+                        </p>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    <div class="text-center">
+        <a href="{{ route('shop-page', ['sort' => 'latest']) }}" id="main-button"
+           class="text-sm font-medium text-gray-700 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-100 transition">
+            View All
+        </a>
+    </div>
+</section>
+
+
+{{-- =======================
+    On Sale
+======================== --}}
+<section class="mb-16">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wide">
+            Sale
+        </h2>
+    </div>
+
+    <div class="grid gap-6 sm:gap-8 lg:gap-10 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-8">
+        @foreach ($salesProducts as $item)
+            {{-- Same product card code --}}
+            <div class="group block">
+                <div class="relative overflow-hidden bg-gray-50">
+                    <a href="{{ url('product-details', $item->id) }}">
+                        <img class="default-img h-[200px] sm:h-[250px] lg:h-[280px] w-full object-contain transition duration-500 group-hover:scale-105" 
+                             src="{{ asset('product/' . $item->image) }}" 
+                             alt="{{ $item->name }}">
+                        @if($item->hover_image)
+                            <img class="hover-img absolute top-0 left-0 h-[200px] sm:h-[250px] lg:h-[280px] w-full object-contain opacity-0 transition-opacity duration-500 group-hover:opacity-100" 
+                                 src="{{ asset('product/' . $item->hover_image) }}" 
+                                 alt="{{ $item->name }}">
+                        @endif
+                    </a>
+                </div>
+
+                <div class="relative bg-white pt-3">
+                    <h3 class="text-xs sm:text-sm text-gray-700 text-left uppercase tracking-wide group-hover:underline group-hover:underline-offset-4">
+                        {{ $item->name }}
+                    </h3>
+
+                    @if (!is_null($item->discount_price) && $item->discount_price > 0)
+                        <div class="mt-2 flex items-center justify-start gap-2">
+                            <span class="text-sm tracking-wider text-black font-bold">₱{{ number_format($item->discount_price, 2) }}</span>
+                            <span class="text-xs text-gray-400 line-through">₱{{ number_format($item->price, 2) }}</span>
+                        </div>
+                    @else
+                        <p class="mt-2 text-left">
+                            <span class="text-sm tracking-wider text-gray-900 font-semibold">₱{{ number_format($item->price, 2) }}</span>
+                        </p>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    <div class="text-center">
+        <a href="{{ route('shop-sale') }}" id="main-button"
+           class="text-sm font-medium text-gray-700 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-100 transition">
+            View All
+        </a>
+    </div>
+</section>
+
+
+{{-- =======================
+    Tees
+======================== --}}
+<section class="mb-16">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wide">
+            Tees
+        </h2>
+    </div>
+
+    <div class="grid gap-6 sm:gap-8 lg:gap-10 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        @foreach ($teesProducts as $item)
+            {{-- Same product card code --}}
+            <div class="group block">
+                <div class="relative overflow-hidden bg-gray-50">
+                    <a href="{{ url('product-details', $item->id) }}">
+                        <img class="default-img h-[200px] sm:h-[250px] lg:h-[280px] w-full object-contain transition duration-500 group-hover:scale-105" 
+                             src="{{ asset('product/' . $item->image) }}" 
+                             alt="{{ $item->name }}">
+                        @if($item->hover_image)
+                            <img class="hover-img absolute top-0 left-0 h-[200px] sm:h-[250px] lg:h-[280px] w-full object-contain opacity-0 transition-opacity duration-500 group-hover:opacity-100" 
+                                 src="{{ asset('product/' . $item->hover_image) }}" 
+                                 alt="{{ $item->name }}">
+                        @endif
+                    </a>
+                </div>
+
+                <div class="relative bg-white pt-3">
+                    <h3 class="text-xs sm:text-sm text-gray-700 text-left uppercase tracking-wide group-hover:underline group-hover:underline-offset-4">
+                        {{ $item->name }}
+                    </h3>
+
+                    @if (!is_null($item->discount_price) && $item->discount_price > 0)
+                        <div class="mt-2 flex items-center justify-start gap-2">
+                            <span class="text-sm tracking-wider text-black font-bold">₱{{ number_format($item->discount_price, 2) }}</span>
+                            <span class="text-xs text-gray-400 line-through">₱{{ number_format($item->price, 2) }}</span>
+                        </div>
+                    @else
+                        <p class="mt-2 text-left">
+                            <span class="text-sm tracking-wider text-gray-900 font-semibold">₱{{ number_format($item->price, 2) }}</span>
+                        </p>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    </div><br>
+    <div class="text-center">
+        <a href="{{ route('shop-page', ['category' => 'Tees']) }}" id="main-button"
+           class="text-sm font-medium text-gray-700 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-100 transition">
+            View All
+        </a>
+    </div>         
+</section>
+
+{{-- =======================
+    Shop All CTA
+======================== --}}
+<section class="mb-16 text-center">
+    <h1 class="text-xl font-semibold text-gray-800 mb-4">Can't Find What you're looking for?</h1>
+    <a href="{{ route('shop-page') }}" 
+       class="inline-block text-sm font-medium text-white bg-gray-800 border border-gray-800 rounded-md px-6 py-2 hover:bg-gray-900 transition">
+        SHOP ALL PRODUCTS HERE
+    </a>
+</section>
+
+</div>
 
     {{--
          LATEST BLOG PREVIEW SECTION
          Static preview of most recent blog post
          --}}
-    <div class="latestblog">
+    <div class="latestblog mt-16">
         <h1>LATEST BLOG</h1> 
 
         <div class="blog-cont">

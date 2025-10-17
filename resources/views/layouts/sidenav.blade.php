@@ -1,5 +1,4 @@
 <!-- layouts.sidenav for admin panel-->
-<!-- Main Navigation -->
 <nav class="space-y-2 mb-8">
     <ul class="space-y-2">
         <li>

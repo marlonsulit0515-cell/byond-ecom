@@ -15,7 +15,7 @@ class CheckoutController extends Controller
 {
     public function checkout(Request $request)
     {
-        // Check authentication
+        // Check if the user has login account before proceeding to checkout
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'You must be logged in to complete your order.');
         }

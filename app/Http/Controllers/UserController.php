@@ -71,7 +71,6 @@ class UserController extends BaseController
         return view('UserPanel.userdash', compact('orders', 'recentOrders', 'orderStats'));
     }
 
-    // Your orders method (looks good)
     public function orders(Request $request)
     {
         $user = Auth::user();

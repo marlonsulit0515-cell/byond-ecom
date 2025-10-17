@@ -10,6 +10,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Middleware\Admin;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Product;
 
 /*
@@ -27,10 +28,16 @@ Route::get('/', function () {
 });
 
 // Landing page route
-Route::get('/home', function () {
-    $product = Product::all(); //Display all products in the home page
-    return view('home', compact('product'));
-})->name('home');
+Route::get('/home', [ShopController::class, 'homepage_products'])->name('home');
+Route::get('/shop/sale', function () {
+    $product = Product::whereNotNull('discount_price')
+        ->where('discount_price', '>', 0)
+        ->latest()
+        ->paginate(12);
+
+    return view('shop.shop-page', compact('product'));
+})->name('shop-sale');
+
 
 Route::get('/aboutus', function () {
     return view('aboutus');

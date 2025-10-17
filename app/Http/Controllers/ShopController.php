@@ -13,6 +13,28 @@ use Illuminate\Support\Facades\Log;
 class ShopController extends Controller
 {
 
+    public function homepage_Products()
+    {   
+        //latest addes products
+        $recentProducts = Product::latest()->take(15)->get();
+
+        //latest Sale Products
+       $salesProducts = Product::whereNotNull('discount_price')
+            ->where('discount_price', '>', 0)
+            ->orderBy('updated_at', 'desc')
+            ->take(15)
+            ->get();
+
+        //10 products under "Tees" category
+        $teesProducts = Product::where('category', 'Tees')
+            ->latest()
+            ->take(15)
+            ->get();
+
+        // Return to the home view
+        return view('home', compact('recentProducts', 'salesProducts', 'teesProducts'));
+    }
+
 
     public function item_details($id)
     {   

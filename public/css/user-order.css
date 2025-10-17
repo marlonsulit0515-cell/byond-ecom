@@ -1,318 +1,4 @@
-/* User Order Page - Shopee Style Grid Layout */
-/* Order Status Navigation */
-.order-status-nav {
-    display: flex;
-    gap: 24px;
-    border-bottom: 1px solid #ddd;
-    margin-bottom: 20px;
-    padding: 12px 0;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-a.status-link {
-    color: #333;
-    text-decoration: none;
-    padding-bottom: 8px;
-    position: relative;
-    transition: color 0.2s ease;
-}
-
-a.status-link:hover {
-    color: #1F0C35;
-    text-decoration: none;
-}
-
-a.status-link:focus {
-    text-decoration: none;
-    outline: 2px solid #1F0C35;
-    outline-offset: 2px;
-}
-
-a.status-link.active {
-    color: #1F0C35;
-}
-
-a.status-link.active::after {
-    content: "";
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: #1F0C35;
-    border-radius: 2px;
-}
-
-.dashboard-content h1 {
-    color: #333;
-    margin-bottom: 32px;
-    font-size: 28px;
-    font-weight: 700;
-    border-bottom: 2px solid #242424;
-    padding-bottom: 12px;
-}
-
-/* Order Grid Container */
-.orders-grid {
-    display: grid;
-    color: #333;
-    gap: 16px;
-}
-
-/* Individual Order Card */
-.order-card {
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
-    background: white;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.order-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
-}
-
-/* Order Header */
-.order-header {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    padding: 16px 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-bottom: 1px solid #dee2e6;
-    gap: 16px;
-}
-
-.order-number {
-    font-weight: 600;
-    color: #495057;
-    font-size: 14px;
-}
-
-.order-date {
-    color: #6c757d;
-    font-size: 13px;
-    margin-top: 2px;
-}
-
-/* Status Badge */
-.status-badge {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-pending {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeaa7;
-}
-
-.status-completed {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #b8daff;
-}
-
-.status-cancelled {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-.status-processing {
-    background-color: #cce5ff;
-    color: #004085;
-    border: 1px solid #99d3ff;
-}
-
-.status-shipped {
-    background-color: #e1f5fe;
-    color: #01579b;
-    border: 1px solid #81d4fa;
-}
-
-.status-return-refund {
-    background-color: #fff3e0;
-    color: #ef6c00;
-    border: 1px solid #ffcc02;
-}
-
-/* Order Items Grid */
-.order-items {
-    display: grid;
-    gap: 12px;
-    padding: 20px;
-}
-
-.order-item {
-    display: grid;
-    grid-template-columns: 80px 1fr auto;
-    gap: 16px;
-    align-items: center;
-    padding: 12px;
-    border: 1px solid #f1f3f4;
-    border-radius: 6px;
-    background: #fafbfc;
-    transition: background-color 0.2s ease;
-}
-
-.order-item:hover {
-    background: #f5f6f7;
-}
-
-/* Product Image */
-.product-image {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid #e9ecef;
-}
-
-/* Product Details */
-.product-details {
-    min-width: 0; /* Prevents text overflow issues */
-}
-
-.product-name {
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 8px;
-    font-size: 16px;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.product-specs {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.spec-item {
-    font-size: 13px;
-    color: #6c757d;
-}
-
-.spec-label {
-    font-weight: 500;
-    color: #495057;
-}
-
-/* Product Pricing */
-.product-pricing {
-    text-align: right;
-    font-weight: 300;
-    min-width: 120px;
-}
-
-.item-total {
-    font-size: 16px;
-    font-weight: 600;
-    color: #180501;
-}
-
-/* Order Summary */
-.order-summary {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 20px;
-    align-items: center;
-    padding: 16px 20px;
-    background: #f8f9fa;
-    border-top: 1px solid #e9ecef;
-}
-
-.payment-info {
-    font-size: 14px;
-    color: #495057;
-}
-
-.payment-method {
-    font-weight: 600;
-    color: #28a745;
-    margin-top: 4px;
-}
-
-.payment-status {
-    font-weight: 500;
-    color: #6c757d;
-}
-
-.order-total {
-    text-align: right;
-    min-width: 150px;
-}
-
-.total-label {
-    font-size: 14px;
-    color: #6c757d;
-    margin-bottom: 4px;
-}
-
-.total-amount {
-    font-size: 20px;
-    font-weight: 700;
-    color: #1a0602;
-}
-
-/* Action Buttons */
-.order-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-}
-
-.btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none !important;
-    display: inline-block;
-    text-align: center;
-    white-space: nowrap;
-}
-
-.btn:hover,
-.btn:focus {
-    text-decoration: none !important;
-}
-
-.btn-primary {
-    background-color: #080808;
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: #8F7F77;
-    color: white;
-}
-
-.btn-outline {
-    background-color: transparent;
-    color: black;
-    border: 1px solid #1F0C35;
-}
-
-.btn-outline:hover {
-    background-color: #1F0C35;
-    color: white;
-}
+/* User Order Page Styles */
 
 /* Empty State */
 .empty-orders {
@@ -342,41 +28,28 @@ a.status-link.active::after {
 }
 
 /* Responsive Design */
-@media (max-width: 992px) {
-    .order-summary {
-        grid-template-columns: 1fr auto;
-        gap: 16px;
+@media (max-width: 768px) {
+    .order-header {
+        flex-direction: column;
+        align-items: flex-start !important;
     }
     
-    .payment-info {
-        grid-column: 1 / -1;
-        margin-bottom: 8px;
+    .order-summary {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .order-actions {
+        width: 100%;
+        justify-content: flex-start !important;
     }
 }
 
-@media (max-width: 768px) {
-    .dashboard-container {
-        padding: 10px;
-    }
-    
-    .dashboard-content {
-        padding: 16px;
-    }
-    
-    .order-status-nav {
-        gap: 16px;
-        flex-wrap: wrap;
-    }
-    
-    .order-header {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        text-align: left;
-    }
-    
+@media (max-width: 480px) {
     .order-item {
-        grid-template-columns: 60px 1fr;
-        gap: 12px;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
     }
     
     .product-image {
@@ -384,73 +57,12 @@ a.status-link.active::after {
         height: 60px;
     }
     
-    .product-pricing {
-        grid-column: 1 / -1;
-        text-align: left;
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px solid #e9ecef;
-    }
-    
-    .order-summary {
-        grid-template-columns: 1fr;
-        gap: 12px;
-        text-align: left;
-    }
-    
-    .order-total {
-        text-align: left;
-    }
-    
-    .order-actions {
-        justify-content: flex-start;
-    }
-    
-    .product-specs {
-        grid-template-columns: 1fr;
-        gap: 4px;
-    }
-}
-
-@media (max-width: 480px) {
-    .dashboard-content h1 {
-        font-size: 24px;
-    }
-    
-    .order-status-nav {
-        gap: 12px;
-        font-size: 13px;
-    }
-    
-    .order-item {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: 8px;
-    }
-    
-    .product-image {
-        width: 50px;
-        height: 50px;
-        margin: 0 auto;
-    }
-    
-    .product-details {
-        text-align: center;
-    }
-    
-    .product-pricing {
-        border-top: 1px solid #e9ecef;
-        margin-top: 12px;
-        padding-top: 12px;
-        text-align: center;
-    }
-    
     .order-actions {
         flex-direction: column;
-        gap: 8px;
     }
     
-    .btn {
+    .order-actions button,
+    .order-actions a {
         width: 100%;
     }
 }
