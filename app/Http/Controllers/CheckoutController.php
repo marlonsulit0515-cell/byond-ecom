@@ -13,6 +13,9 @@ use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
 class CheckoutController extends Controller
 {
+    /**
+     * Process checkout and create order
+     */
     public function checkout(Request $request)
     {
         // Check if the user has login account before proceeding to checkout
@@ -150,164 +153,176 @@ class CheckoutController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Checkout error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Something went wrong. Please try again.');
+            Log::error('Checkout error: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'cart' => $cart,
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with('error', 'Something went wrong. Please try again. Error: ' . $e->getMessage());
         }
     }
 
+    /**
+     * Create PayPal payment and redirect to PayPal
+     */
     public function createPayPalPayment(Order $order)
-{
-    try {
-        $provider = new PayPalClient;
-        $provider->setApiCredentials(config('paypal'));
-        $paypalToken = $provider->getAccessToken();
+    {
+        try {
+            $provider = new PayPalClient;
+            $provider->setApiCredentials(config('paypal'));
+            $paypalToken = $provider->getAccessToken();
 
-        // Prepare cart items for PayPal
-        $cart = session('cart', []);
-        $items = [];
+            // Prepare cart items for PayPal
+            $cart = session('cart', []);
+            $items = [];
 
-        foreach ($cart as $id => $item) {
-            $items[] = [
-                'name' => $item['name'] . (isset($item['size']) ? ' (Size: ' . $item['size'] . ')' : ''),
-                'quantity' => (string) $item['quantity'],
-                'unit_amount' => [
-                    'currency_code' => 'PHP',
-                    'value' => number_format($item['price'], 2, '.', '')
-                ]
-            ];
-        }
+            foreach ($cart as $id => $item) {
+                $items[] = [
+                    'name' => $item['name'] . (isset($item['size']) ? ' (Size: ' . $item['size'] . ')' : ''),
+                    'quantity' => (string) $item['quantity'],
+                    'unit_amount' => [
+                        'currency_code' => 'PHP',
+                        'value' => number_format($item['price'], 2, '.', '')
+                    ]
+                ];
+            }
 
-        $response = $provider->createOrder([
-            "intent" => "CAPTURE",
-            "application_context" => [
-                "return_url" => route('paypal.success'),
-                "cancel_url" => route('paypal.cancel'),
-                "brand_name" => config('app.name'),
-                "landing_page" => "LOGIN",
-                "user_action" => "PAY_NOW"
-            ],
-            "purchase_units" => [
-                [
-                    "reference_id" => $order->order_number,
-                    "description" => "Order #{$order->order_number}",
-                    "amount" => [
-                        "currency_code" => "PHP",
-                        "value" => number_format((float)$order->total, 2, '.', ''),
-                        "breakdown" => [
-                            "item_total" => [
-                                "currency_code" => "PHP",
-                                "value" => number_format((float)$order->total, 2, '.', '')
+            $response = $provider->createOrder([
+                "intent" => "CAPTURE",
+                "application_context" => [
+                    "return_url" => route('paypal.success'),
+                    "cancel_url" => route('paypal.cancel'),
+                    "brand_name" => config('app.name'),
+                    "landing_page" => "LOGIN",
+                    "user_action" => "PAY_NOW"
+                ],
+                "purchase_units" => [
+                    [
+                        "reference_id" => $order->order_number,
+                        "description" => "Order #{$order->order_number}",
+                        "amount" => [
+                            "currency_code" => "PHP",
+                            "value" => number_format((float)$order->total, 2, '.', ''),
+                            "breakdown" => [
+                                "item_total" => [
+                                    "currency_code" => "PHP",
+                                    "value" => number_format((float)$order->total, 2, '.', '')
+                                ]
                             ]
-                        ]
-                    ],
-                    "items" => $items,
-                    "shipping" => [
-                        "name" => [
-                            "full_name" => $order->full_name
                         ],
-                        "address" => [
-                            "address_line_1" => $order->billing_address,
-                            "admin_area_2" => $order->city,
-                            "admin_area_1" => $order->province,
-                            "postal_code" => $order->postal_code,
-                            "country_code" => "PH"
+                        "items" => $items,
+                        "shipping" => [
+                            "name" => [
+                                "full_name" => $order->full_name
+                            ],
+                            "address" => [
+                                "address_line_1" => $order->billing_address,
+                                "admin_area_2" => $order->city,
+                                "admin_area_1" => $order->province,
+                                "postal_code" => $order->postal_code,
+                                "country_code" => "PH"
+                            ]
                         ]
                     ]
                 ]
-            ]
-        ]);
-
-        if (isset($response['id']) && $response['id'] != null) {
-            // Store PayPal order ID in session
-            session([
-                'paypal_order_id' => $response['id'],
-                'order_id' => $order->id
             ]);
 
-            // Update payment with PayPal order ID
-            $payment = $order->payment()->first();
-            if ($payment) {
-                $payment->update(['transaction_id' => $response['id']]);
-            }
-
-            // Redirect user to PayPal approval link
-            foreach ($response['links'] as $links) {
-                if ($links['rel'] === 'approve') {
-                    return redirect()->away($links['href']);
-                }
-            }
-
-            return redirect()
-                ->route('checkout.process')
-                ->with('error', 'Something went wrong with PayPal.');
-        }
-
-        Log::error('PayPal Order Creation Failed', $response);
-        return redirect()
-            ->route('checkout.process')
-            ->with('error', 'Something went wrong with PayPal.');
-
-    } catch (\Exception $e) {
-        Log::error('PayPal payment creation error: ' . $e->getMessage());
-        return redirect()
-            ->route('checkout.process')
-            ->with('error', 'PayPal payment failed. Please try again.');
-    }
-}
-
-
-    public function paypalSuccess(Request $request)
-{
-    try {
-        $provider = new PayPalClient;
-        $provider->setApiCredentials(config('paypal'));
-        $provider->getAccessToken();
-
-        // PayPal sends 'token' in the query string, which is actually the orderID
-        $paypalOrderId = $request->get('token');
-        $response = $provider->capturePaymentOrder($paypalOrderId);
-
-        if (isset($response['status']) && $response['status'] === 'COMPLETED') {
-            // Retrieve our order from session
-            $orderId = session('order_id');
-            $order = Order::findOrFail($orderId);
-
-            // Update payment status
-            $payment = $order->payment()->first();
-            if ($payment) {
-                $payment->update([
-                    'status' => 'paid',
-                    'transaction_id' => $response['id'], // PayPal capture ID
+            if (isset($response['id']) && $response['id'] != null) {
+                // Store PayPal order ID in session
+                session([
+                    'paypal_order_id' => $response['id'],
+                    'order_id' => $order->id
                 ]);
+
+                // Update payment with PayPal order ID
+                $payment = $order->payment()->first();
+                if ($payment) {
+                    $payment->update(['transaction_id' => $response['id']]);
+                }
+
+                // Redirect user to PayPal approval link
+                foreach ($response['links'] as $links) {
+                    if ($links['rel'] === 'approve') {
+                        return redirect()->away($links['href']);
+                    }
+                }
+
+                return redirect()
+                    ->route('checkout_page')
+                    ->with('error', 'Something went wrong with PayPal.');
             }
 
-            // Update order status
-            $order->update(['status' => 'processing']);
+            Log::error('PayPal Order Creation Failed', $response);
+            return redirect()
+                ->route('checkout_page')
+                ->with('error', 'Something went wrong with PayPal.');
 
-            // Reduce stock after successful payment
-            $this->reduceStock($order);
+        } catch (\Exception $e) {
+            Log::error('PayPal payment creation error: ' . $e->getMessage());
+            return redirect()
+                ->route('checkout_page')
+                ->with('error', 'PayPal payment failed. Please try again.');
+        }
+    }
 
-            // Clear session and cart
-            session()->forget(['paypal_order_id', 'order_id', 'cart']);
+    /**
+     * Handle successful PayPal payment
+     */
+    public function paypalSuccess(Request $request)
+    {
+        try {
+            $provider = new PayPalClient;
+            $provider->setApiCredentials(config('paypal'));
+            $provider->getAccessToken();
+
+            // PayPal sends 'token' in the query string, which is actually the orderID
+            $paypalOrderId = $request->get('token');
+            $response = $provider->capturePaymentOrder($paypalOrderId);
+
+            if (isset($response['status']) && $response['status'] === 'COMPLETED') {
+                // Retrieve our order from session
+                $orderId = session('order_id');
+                $order = Order::findOrFail($orderId);
+
+                // Update payment status
+                $payment = $order->payment()->first();
+                if ($payment) {
+                    $payment->update([
+                        'status' => 'paid',
+                        'transaction_id' => $response['id'], // PayPal capture ID
+                    ]);
+                }
+
+                // Update order status
+                $order->update(['status' => 'processing']);
+
+                // Reduce stock after successful payment
+                $this->reduceStock($order);
+
+                // Clear session and cart
+                session()->forget(['paypal_order_id', 'order_id', 'cart']);
+
+                return redirect()
+                    ->route('shop.confirmation', $order->order_number)
+                    ->with('success', 'Payment successful! Your order has been placed.');
+            }
 
             return redirect()
-                ->route('shop.confirmation', $order->order_number)
-                ->with('success', 'Payment successful! Your order has been placed.');
+                ->route('checkout_page')
+                ->with('error', 'Payment was not completed.');
+
+        } catch (\Exception $e) {
+            Log::error('PayPal success callback error: ' . $e->getMessage());
+            return redirect()
+                ->route('checkout_page')
+                ->with('error', 'Payment verification failed.');
         }
-
-        return redirect()
-            ->route('checkout.process')
-            ->with('error', 'Payment was not completed.');
-
-    } catch (\Exception $e) {
-        Log::error('PayPal success callback error: ' . $e->getMessage());
-        return redirect()
-            ->route('checkout.process')
-            ->with('error', 'Payment verification failed.');
     }
-}
 
-
+    /**
+     * Handle cancelled PayPal payment
+     */
     public function paypalCancel()
     {
         // Get order from session and delete it since payment was cancelled
@@ -321,25 +336,13 @@ class CheckoutController extends Controller
         session()->forget(['paypal_order_id', 'order_id']);
         
         return redirect()
-            ->route('checkout.process')
+            ->route('checkout_page')
             ->with('error', 'Payment was cancelled.');
     }
 
-    public function confirmation($orderNumber)
-    {
-        // Ensure only authenticated users can view confirmations
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'You must be logged in to view order confirmations.');
-        }
-        
-        $order = Order::where('order_number', $orderNumber)
-            ->where('user_id', Auth::id()) // Only allow users to view their own orders
-            ->with(['items.product', 'payment']) // Load product relationship
-            ->firstOrFail();
-
-        return view('shop.confirmation', compact('order'));
-    }
-
+    /**
+     * Reduce product stock after successful payment
+     */
     private function reduceStock(Order $order)
     {
         foreach ($order->items as $orderItem) {
@@ -355,7 +358,7 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Handle Maya payment redirection or instructions.
+     * Handle Maya payment redirection or instructions
      */
     public function createMayaPayment(Order $order)
     {
@@ -368,7 +371,7 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Handle GCash payment redirection or instructions.
+     * Handle GCash payment redirection or instructions
      */
     public function createGCashPayment(Order $order)
     {

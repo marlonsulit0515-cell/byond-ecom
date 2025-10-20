@@ -1,7 +1,20 @@
-<link href="{{ asset('css/login.css') }}" rel="stylesheet" />
-<link rel="stylesheet" href="https://use.typekit.net/oov2wcw.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link href="https://fonts.cdnfonts.com/css/labor-union" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ asset('img/logo/ByondLogo-Brown.png') }}">
+    <link href="{{ asset('css/login.css') }}" rel="stylesheet" />
+    <link href="{{ asset('css/font-style.css') }}" rel="stylesheet" />
+    <link href="{{ asset('css/screen-behavior.css') }}" rel="stylesheet" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Account Login</title>
+</head>
+<body>
 <div class="login-hero">
     <div class="login-head"></div>
 
@@ -62,3 +75,5 @@
         </form>
     </div>
 </div>
+</body>
+</html>

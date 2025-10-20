@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Middleware\Admin;
@@ -28,12 +29,12 @@ Route::get('/', function () {
 });
 
 // Landing page route
-Route::get('/home', [ShopController::class, 'homepage_products'])->name('home');
+Route::get('/home', [HomeController::class, 'homepage_products'])->name('home');
 Route::get('/shop/sale', function () {
     $product = Product::whereNotNull('discount_price')
         ->where('discount_price', '>', 0)
         ->latest()
-        ->paginate(12);
+        ->paginate(15);
 
     return view('shop.shop-page', compact('product'));
 })->name('shop-sale');
@@ -179,24 +180,31 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
 |--------------------------------------------------------------------------
 | ShopController Routes
 |--------------------------------------------------------------------------
-|
+| Handles: Product display, Homepage, Shop pages, Checkout page view, Confirmation
 */
 
-Route::get('/cart', [ShopController::class, 'cart_page'])->name('cart');
 Route::get('/product-details/{id}', [ShopController::class, 'item_details'])->name('product-details');
 
-// Add to cart
-Route::post('/add-to-cart/{id}', [ShopController::class, 'add_to_cart'])->name('cart-page');
-Route::get('/view-cart', [ShopController::class, 'view_cart'])->name('view-cart');
-Route::post('/update-cart', [ShopController::class, 'update_cart'])->name('update-cart');
-Route::post('/remove-from-cart', [ShopController::class, 'remove_from_cart'])->name('remove-from-cart');
-Route::post('/buy-now/{id}', [ShopController::class, 'buy_now'])->name('buy-now');
-
+// Protected routes requiring authentication
 Route::middleware(['auth', \App\Http\Middleware\UserMiddleware::class])->group(function () {
-Route::get('/checkout', [ShopController::class, 'checkout_page'])->name('checkout_page');
-Route::get('/shop/confirmation/{orderNumber}', [ShopController::class, 'confirmation'])->name('shop.confirmation');
-Route::get('/shop-more', [ShopController::class, 'shop_more'])->name('shop.more');
+    Route::get('/checkout', [ShopController::class, 'checkout_page'])->name('checkout_page');
+    Route::get('/shop/confirmation/{orderNumber}', [ShopController::class, 'confirmation'])->name('shop.confirmation');
 });
+
+/*
+|--------------------------------------------------------------------------
+| CartController Routes
+|--------------------------------------------------------------------------
+| Handles: Add to cart, Update cart, Remove from cart, View cart, Buy now
+*/
+
+Route::get('/cart', [CartController::class, 'view_cart'])->name('cart');
+Route::get('/view-cart', [CartController::class, 'view_cart'])->name('view-cart');
+Route::post('/add-to-cart/{id}', [CartController::class, 'add_to_cart'])->name('cart-page');
+Route::post('/update-cart', [CartController::class, 'update_cart'])->name('update-cart');
+Route::post('/remove-from-cart', [CartController::class, 'remove_from_cart'])->name('remove-from-cart');
+Route::post('/buy-now/{id}', [CartController::class, 'buy_now'])->name('buy-now');
+
 /*
 |--------------------------------------------------------------------------
 | OrderController Routes
@@ -216,17 +224,25 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
 |--------------------------------------------------------------------------
 | CheckoutController Routes
 |--------------------------------------------------------------------------
-|
+| Handles: Checkout processing, Payment gateway integration (PayPal, GCash, Maya)
 */
 
 Route::post('/checkout/process', [CheckoutController::class, 'checkout'])->name('checkout.process');
+
 // PayPal routes
 Route::get('/paypal/success', [CheckoutController::class, 'paypalSuccess'])->name('paypal.success');
 Route::get('/paypal/cancel', [CheckoutController::class, 'paypalCancel'])->name('paypal.cancel');
 
+/*
+|--------------------------------------------------------------------------
+| Additional Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/my-orders', function () {
     return view('UserPanel.user-orders');
 })->name('view-my-orders');
+
 /*
 |--------------------------------------------------------------------------
 | Authentication Routes

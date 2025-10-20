@@ -7,9 +7,8 @@
 
    <link href="https://fonts.cdnfonts.com/css/labor-union" rel="stylesheet">
    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-   <link href="https://fonts.cdnfonts.com/css/labor-union" rel="stylesheet">
 
-   <link rel="icon" type="image/png" href="{{ asset('img/logo/ByondLogo-BW.png') }}">
+   <link rel="icon" type="image/png" href="{{ asset('img/logo/ByondLogo-Brown.png') }}">
    <link rel="stylesheet" href="https://use.typekit.net/oov2wcw.css">
    <script src="https://cdn.tailwindcss.com"></script>
     
@@ -24,8 +23,11 @@
    <link href="{{ asset('css/footer.css') }}" rel="stylesheet" />
    <link href="{{ asset('css/user-dashboard.css') }}" rel="stylesheet" />
    <link href="{{ asset('css/font-style.css') }}" rel="stylesheet" />
-   <link rel="icon" type="image/png" href="{{ asset('img/logo/ByondLogo-Brown.png') }}">
-   
+   <link href="{{ asset('css/screen-behavior.css') }}" rel="stylesheet" />
+
+   <link href="{{ asset('css/product-card.css') }}" rel="stylesheet" />
+   <link href="{{ asset('css/button-design.css') }}" rel="stylesheet" />
+
  </head>
  <body>
 

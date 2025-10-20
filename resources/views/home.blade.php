@@ -1,7 +1,4 @@
 @extends('layouts.default')
-
-{{-- Custom CSS for items styling --}}
-<link href="{{ asset('css/product-card.css') }}" rel="stylesheet" />
 @section('maincontent')
     <div class="slideshow mb-12">
         <div class="slideshow-container">
@@ -38,16 +35,13 @@
 
     <div class="mx-4 sm:mx-8 lg:mx-16 xl:mx-24">
 
-{{-- =======================
-    Recent Drops
-======================== --}}
+<!--Recent Drops-->
 <section class="mb-16">
     <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wide">
             Recent Drops
         </h2>
     </div>
-
     <div class="grid gap-6 sm:gap-8 lg:gap-10 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-8">
         @foreach ($recentProducts as $item)
             {{-- Product card --}}
@@ -142,11 +136,22 @@
     </div>
 
     <div class="text-center">
-        <a href="{{ route('shop-sale') }}" id="main-button"
-           class="text-sm font-medium text-gray-700 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-100 transition">
-            View All
-        </a>
-    </div>
+    <a href="{{ route('shop-sale') }}" id="link-button">
+        <span class="hover-underline-animation">View All</span>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="10"
+            viewBox="0 0 46 16"
+            fill="currentColor"
+        >
+            <path
+                d="M8,0,6.545,1.455l5.506,5.506H-30V9.039H12.052L6.545,14.545,8,16l8-8Z"
+                transform="translate(30)"
+            ></path>
+        </svg>
+    </a>
+</div>
 </section>
 
 

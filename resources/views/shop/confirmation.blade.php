@@ -97,7 +97,7 @@
 
         <!-- Actions -->
         <div class="actions">
-            <a href="{{ route('shop.more') }}" class="btn primary">Continue Shopping</a>
+            <a href="{{ route('shop-page') }}" class="btn primary">Continue Shopping</a>
             <a href="{{ route('orders.dashboard') }}" class="btn secondary">View Orders</a>
         </div>
     </div>

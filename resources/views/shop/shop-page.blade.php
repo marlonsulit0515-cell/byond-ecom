@@ -3,7 +3,7 @@
 <link href="{{ asset('css/product-card.css') }}" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <h1 class="text-2xl font-bold text-gray-800 mb-4">
-    {{ isset($category) ? $category : 'All Products' }}
+    {{ isset($category) ? $category : 'Shop Page' }}
 </h1>
 
 {{-- Top Bar with Sort + Filter --}}
@@ -12,7 +12,7 @@
         <!-- Left side: Sort + Filter Button -->
         <div class="flex items-center gap-3">
             <!-- Sort Dropdown -->
-            <form method="GET" action="{{ route('shop-page') }}" id="sortForm" class="flex items-center gap-2">
+            <form method="GET" action="{{ isset($category) ? route('shop-category', $category) : route('shop-page') }}" id="sortForm" class="flex items-center gap-2">
                 <!-- Preserve all current filters when sorting -->
                 <input type="hidden" name="price_from" value="{{ request('price_from') }}">
                 <input type="hidden" name="price_to" value="{{ request('price_to') }}">
@@ -20,7 +20,7 @@
                 <input type="hidden" name="size" value="{{ request('size') }}">
 
                 <label class="text-sm font-medium text-gray-700">Sort:</label>
-                <select name="sort" id="sortSelect" name="sort
+                <select name="sort" id="sortSelect"
                         class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest</option>
                     <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Name: A to Z</option>
@@ -44,11 +44,12 @@
 </div>
 
 {{-- Filter Sidebar Overlay --}}
-<div id="filterOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+<div id="filterOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden" style="top: var(--header-height, 0px);"></div>
 
 {{-- Filter Sidebar on Left --}}
 <div id="filterSidebar" 
-     class="fixed top-0 left-0 h-full w-80 bg-white shadow-xl z-50 transform -translate-x-full transition-transform duration-300 ease-in-out">
+     class="fixed left-0 w-80 bg-white shadow-xl z-50 transform -translate-x-full transition-transform duration-300 ease-in-out overflow-y-auto" 
+     style="top: var(--header-height, 0px); height: calc(100vh - var(--header-height, 0px));">
     
     {{-- Sidebar Header --}}
     <div class="flex items-center justify-between p-4 border-b border-gray-200">
@@ -63,7 +64,7 @@
 
     {{-- Filter Form --}}
     <div class="p-4 lg:p-6">
-        <form method="GET" action="{{ route('shop-page') }}" id="filterForm">
+        <form method="GET" action="{{ isset($category) ? route('shop-category', $category) : route('shop-page') }}" id="filterForm">
             <!-- Preserve sort when filtering -->
             <input type="hidden" name="sort" value="{{ request('sort') }}">
 
@@ -134,7 +135,7 @@
 
             {{-- Clear --}}
             <div class="pt-4 border-t border-gray-200">
-                <a href="{{ route('shop-page') }}" 
+                <a href="{{ isset($category) ? route('shop-category', $category) : route('shop-page') }}" 
                    class="w-full inline-block text-center px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
                     Clear All Filters
                 </a>
@@ -167,11 +168,13 @@
                 <span class="text-gray-500 hover:text-red-600">&times;</span>
             </a>
         @endif
-        <a href="{{ route('shop-page') }}" class="text-sm text-gray-500 underline hover:text-gray-800">
+        <a href="{{ isset($category) ? route('shop-category', $category) : route('shop-page') }}" 
+           class="text-sm text-gray-500 underline hover:text-gray-800">
             Clear All
         </a>
     </div>
 @endif
+
 <!--Product Grid Display Shop Page-->
 <div class="flex">
     <div class="flex-1">

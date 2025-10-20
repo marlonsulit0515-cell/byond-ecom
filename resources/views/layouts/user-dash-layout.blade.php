@@ -1,8 +1,6 @@
 @extends('layouts.default')
-
 @section('maincontent')
-<link href="{{ asset('css/user-dashboard.css') }}" rel="stylesheet" />
-<script src="https://cdn.tailwindcss.com"></script>
+
 
 <div class="flex h-[calc(100vh-100px)] bg-gray-50 overflow-hidden">
     <!-- Sidebar (fixed width, fixed position inside layout) -->

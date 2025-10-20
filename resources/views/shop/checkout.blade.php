@@ -1,6 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="{{ asset('css/checkout.css') }}" rel="stylesheet" />
+    
+    <title>Checkout Page</title>
+</head>
+<body>
 @extends('layouts.default')
-<link href="{{ asset('css/checkout.css') }}" rel="stylesheet" />
-
 @section('maincontent')
 <div class="checkout-container">
     <h1 class="checkout-title">Checkout</h1>
@@ -235,3 +244,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+</body>
+</html>

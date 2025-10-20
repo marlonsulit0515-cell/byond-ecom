@@ -3,19 +3,34 @@
 namespace App\Http\Controllers;
 use \App\Models\Product;
 use Illuminate\Support\Facades\DB;
-use \App\Models\Category;
-
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
     {   
-    
-         
+    public function homepage_products()
+    {   
+        // Latest added products
+        $recentProducts = Product::latest()->take(15)->get();
 
+        // Latest Sale Products
+        $salesProducts = Product::whereNotNull('discount_price')
+            ->where('discount_price', '>', 0)
+            ->orderBy('updated_at', 'desc')
+            ->take(15)
+            ->get();
+
+        // 10 products under "Tees" category
+        $teesProducts = Product::where('category', 'Tees')
+            ->latest()
+            ->take(15)
+            ->get();
+
+        // Return to the home view
+        return view('home', compact('recentProducts', 'salesProducts', 'teesProducts'));
+    }
     //Filter for the shop page
-    public function shop_menu() {
-        $query = Product::query();
-        
+      private function applyFilters($query)
+    {
         // Sorting
         switch(request('sort')) {
             case 'name_asc':
@@ -50,10 +65,10 @@ class HomeController extends Controller
             if (request('availability') == 'in_stock') {
                 $query->where(function($q) {
                     $q->where('stock_s', '>', 0)
-                    ->orWhere('stock_m', '>', 0)
-                    ->orWhere('stock_l', '>', 0)
-                    ->orWhere('stock_xl', '>', 0)
-                    ->orWhere('stock_2xl', '>', 0);
+                      ->orWhere('stock_m', '>', 0)
+                      ->orWhere('stock_l', '>', 0)
+                      ->orWhere('stock_xl', '>', 0)
+                      ->orWhere('stock_2xl', '>', 0);
                 });
             } elseif (request('availability') == 'out_of_stock') {
                 $query->whereRaw("
@@ -72,6 +87,17 @@ class HomeController extends Controller
             $query->where($sizeColumn, '>', 0);
         }
 
+        return $query;
+    }
+
+    /** Display all products with filters*/
+    public function shop_menu() 
+    {
+        $query = Product::query();
+        
+        // Apply filters and sorting
+        $query = $this->applyFilters($query);
+        
         // Pagination with persistent filters
         $product = $query->paginate(15)->appends(request()->query());
 
@@ -88,13 +114,29 @@ class HomeController extends Controller
         return view("shop.shop-page", compact('product'));
     }
 
-
+    /**Display products by category with filters */
     public function category_dropdown($category)
     {
-        $product = Product::where('category', $category)->latest()->paginate(12);
+        $query = Product::where('category', $category);
+        
+        // Apply filters and sorting
+        $query = $this->applyFilters($query);
+        
+        // Pagination with persistent filters
+        $product = $query->paginate(15)->appends(request()->query());
+
+        // Handle AJAX requests for "Load More"
+        if (request()->ajax()) {
+            return response()->json([
+                'html' => view('shop.shop-page', ['product' => $product, 'category' => $category])->render(),
+                'hasMore' => $product->hasMorePages(),
+                'nextPage' => $product->currentPage() + 1
+            ]);
+        }
 
         return view('shop.shop-page', compact('product', 'category'));
     }
+
 
     public function blog_content_one()
     {
