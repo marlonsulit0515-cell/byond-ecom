@@ -174,6 +174,10 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
     Route::get('/update_product/{id}', [AdminController::class, 'update_product'])->name('admin.update-product');
     Route::post('/update_confirmation/{id}', [AdminController::class, 'update_confirmation'])->name('admin.update-changes');
     Route::get('/delete_product/{id}', [AdminController::class, 'delete_product'])->name('admin.delete-product');
+
+    Route::get('/shipping-settings', [AdminController::class, 'shipping_settings'])->name('admin.shipping-settings');
+    Route::get('user-info', [AdminController::class, 'user_info'])->name('admin.user-management');
+    Route::get('/inbox', [AdminController::class, 'inbox'])->name('admin.inbox');
 });
 
 /*
@@ -187,8 +191,12 @@ Route::get('/product-details/{id}', [ShopController::class, 'item_details'])->na
 
 // Protected routes requiring authentication
 Route::middleware(['auth', \App\Http\Middleware\UserMiddleware::class])->group(function () {
-    Route::get('/checkout', [ShopController::class, 'checkout_page'])->name('checkout_page');
-    Route::get('/shop/confirmation/{orderNumber}', [ShopController::class, 'confirmation'])->name('shop.confirmation');
+    Route::get('/checkout', [ShopController::class, 'checkout_page'])
+        ->middleware('throttle:30,1') // limit to 30 requests per minute
+        ->name('checkout_page');
+
+    Route::get('/shop/confirmation/{orderNumber}', [ShopController::class, 'confirmation'])
+        ->name('shop.confirmation');
 });
 
 /*
@@ -201,8 +209,8 @@ Route::middleware(['auth', \App\Http\Middleware\UserMiddleware::class])->group(f
 Route::get('/cart', [CartController::class, 'view_cart'])->name('cart');
 Route::get('/view-cart', [CartController::class, 'view_cart'])->name('view-cart');
 Route::post('/add-to-cart/{id}', [CartController::class, 'add_to_cart'])->name('cart-page');
-Route::post('/update-cart', [CartController::class, 'update_cart'])->name('update-cart');
-Route::post('/remove-from-cart', [CartController::class, 'remove_from_cart'])->name('remove-from-cart');
+Route::patch('/update-cart', [CartController::class, 'update_cart'])->name('update-cart');
+Route::delete('/remove-from-cart', [CartController::class, 'remove_from_cart'])->name('remove-from-cart');
 Route::post('/buy-now/{id}', [CartController::class, 'buy_now'])->name('buy-now');
 
 /*
@@ -232,6 +240,10 @@ Route::post('/checkout/process', [CheckoutController::class, 'checkout'])->name(
 // PayPal routes
 Route::get('/paypal/success', [CheckoutController::class, 'paypalSuccess'])->name('paypal.success');
 Route::get('/paypal/cancel', [CheckoutController::class, 'paypalCancel'])->name('paypal.cancel');
+
+// Paymongo Routes
+Route::get('/paymongo/success', [CheckoutController::class, 'paymongoSuccess'])->name('paymongo.success');
+Route::get('/paymongo/cancel', [CheckoutController::class, 'paymongoCancel'])->name('paymongo.cancel');
 
 /*
 |--------------------------------------------------------------------------

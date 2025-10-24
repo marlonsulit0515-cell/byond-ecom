@@ -1,7 +1,5 @@
 @extends('layouts.dashboard')
-
-
 <!-- Login Section -->
 @section('maincontent')
-<h2>All Coupons</h2>
+    <h1>Current Users</h1>
 @endsection

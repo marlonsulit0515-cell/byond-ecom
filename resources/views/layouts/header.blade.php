@@ -29,7 +29,7 @@
             </li>
         @else
             <li class="profile-link">
-                <a href="{{ Auth::user()->usertype === 'admin' ? route('admin.dashboard') : route('user.dashboard') }}">
+                <a href="{{ Auth::user()->usertype === 'admin' ? route('admin.dashboard') : route('user.orders') }}">
                     <img src="{{ asset('img/icons/Profile_Icon.png') }}" alt="">
                 </a>
                 <div class="profile-tooltip">
@@ -38,30 +38,20 @@
                 </div>
             </li>
         @endguest
+        
         <li>
             <a href="{{ url('view-cart') }}" class="cart-icon">
-                <img src="{{ asset('img/icons/Cart_icon.png') }}" alt="">
+                <img src="{{ asset('img/icons/Cart_icon.png') }}" alt="Cart">
+                @php
+                    $cart = session()->get('cart', []);
+                    $cartCount = array_sum(array_column($cart, 'quantity'));
+                @endphp
+                @if($cartCount > 0)
+                    <span class="cart-badge">{{ $cartCount }}</span>
+                @endif
             </a>
         </li>
     </ul>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const profileIcon = document.getElementById('profile-icon');
-        const dropdownMenu = document.getElementById('dropdown-menu');
-        
-        if(profileIcon && dropdownMenu) {
-            profileIcon.addEventListener('click', function(e) {
-                e.preventDefault();
-                dropdownMenu.style.display = dropdownMenu.style.display === 'none' ? 'block' : 'none';
-            });
-            
-            document.addEventListener('click', function(e) {
-                if (!profileIcon.contains(e.target) && !dropdownMenu.contains(e.target)) {
-                    dropdownMenu.style.display = 'none';
-                }
-            });
-        }
-    });
-</script>
+<script src="{{ asset('script/header.js') }}"></script>

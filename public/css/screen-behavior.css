@@ -1,5 +1,10 @@
 html {
-    scroll-behavior: smooth;
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+}
+
+section {
+  scroll-snap-align: start;
 }
 * {
     -webkit-overflow-scrolling: touch;

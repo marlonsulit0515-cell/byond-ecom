@@ -212,5 +212,17 @@ class AdminController extends Controller
 
             return back()->with('success', 'Order status updated.');
         }
+        public function shipping_settings()
+        {
+            return view('AdminPanel.products.shipping-setting');
+        }
+        public function user_info()
+        {
+            return view('AdminPanel.support.users');
+        }
+        public function inbox()
+        {
+            return view('AdminPanel.support.inbox');
+        }
 
 }

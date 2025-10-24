@@ -1,7 +1,5 @@
 @extends('layouts.dashboard')
-
-
 <!-- Login Section -->
 @section('maincontent')
-<h2>Create New Coupon</h2>
+    <h1>Shipping Settings</h1>
 @endsection

@@ -1,424 +1,199 @@
 @extends('layouts.default')
-<link href="{{ asset('css/view-cart.css') }}" rel="stylesheet" />
-@section('maincontent')
-<div class="cart-container">
-    <h1 class="cart-title">Your Cart</h1>
 
+@section('maincontent')
+<div class="py-4 px-4 sm:px-10 max-w-7xl mx-auto">
     @if(session('success'))
-        <div class="success-message">
+        <div class="mb-4 p-4 bg-green-50 border border-green-200 text-green-800 rounded-lg">
             {{ session('success') }}
         </div>
     @endif
 
     @if(session('error'))
-        <div class="error-message">
+        <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
             {{ session('error') }}
         </div>
     @endif
 
-    <!-- Loading overlay for AJAX requests -->
-    <div id="cart-loading" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 5px;">
-            Updating cart...
-        </div>
-    </div>
-
     @if(!empty($cart))
-        <table class="cart-table">
-            <thead>
-                <tr>
-                    <th>Image</th>
-                    <th>Product Details</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Subtotal</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="cart-tbody">
+        <div class="flex gap-2 border-b border-gray-300 pb-4 mb-6">
+            <h2 class="text-xl font-semibold text-slate-900 flex-1">Shopping Cart</h2>
+            <h4 class="text-base text-slate-900 font-medium">{{ count($cart) }} {{ count($cart) === 1 ? 'Item' : 'Items' }}</h4>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-10">
+            <!-- Cart Items Section -->
+            <div class="lg:col-span-2 bg-white divide-y divide-gray-300">
                 @php $total = 0; @endphp
-                @foreach($cart as $id => $item)
-                    @php 
-                        $subtotal = $item['price'] * $item['quantity'];
+
+                @foreach($cart as $id => $details)
+                    @php
+                        $subtotal = $details['price'] * $details['quantity'];
                         $total += $subtotal;
-                        
-                        // Get current stock for this size from database
-                        $product = \App\Models\Product::find($item['product_id'] ?? $id);
-                        $sizeField = 'stock_' . strtolower($item['size'] ?? 'm');
+
+                        $product = \App\Models\Product::find($details['product_id'] ?? $id);
+                        $sizeField = 'stock_' . strtolower($details['size'] ?? 'm');
                         $currentStock = $product ? ($product->$sizeField ?? 0) : 0;
-                        
-                        // Calculate total quantity of this product+size already in cart
-                        $cartKey = $item['product_id'] . '_' . ($item['size'] ?? 'M');
-                        $totalInCart = 0;
-                        foreach($cart as $cartItem) {
-                            $itemCartKey = ($cartItem['product_id'] ?? $id) . '_' . ($cartItem['size'] ?? 'M');
-                            if($itemCartKey === $cartKey) {
-                                $totalInCart += $cartItem['quantity'];
-                            }
-                        }
                     @endphp
-                    <tr class="{{ $currentStock < $item['quantity'] ? 'low-stock-warning' : '' }}" data-cart-id="{{ $id }}">
-                        <td>
-                            <img src="/product/{{ $item['image'] }}" alt="{{ $item['name'] }}" class="product-image">
-                        </td>
-                        <td class="product-details">
-                            <div class="product-name">{{ $item['name'] }}</div>
-                            <div class="product-size">Size: <strong>{{ $item['size'] ?? 'M' }}</strong></div>
-                            <div class="stock-info">
-                                @if($currentStock > 0)
-                                    <span class="stock-available">{{ $currentStock }} in stock</span>
-                                @else
-                                    <span class="stock-unavailable">Out of stock</span>
-                                @endif
-                            </div>
-                            @if($totalInCart > $currentStock)
-                                <div class="stock-warning">
-                                    Cart quantity ({{ $totalInCart }}) exceeds available stock ({{ $currentStock }})
+
+                    <div class="flex sm:items-center max-sm:flex-col gap-6 py-6 cart-row" data-id="{{ $id }}">
+                        <div class="w-32 h-32 shrink-0">
+                            <img src="/product/{{ $details['image'] }}" 
+                                 alt="{{ $details['name'] }}" 
+                                 class="w-full h-full object-contain" />
+                        </div>
+
+                        <div class="flex items-start gap-4 w-full">
+                            <div class="flex-1">
+                                <h3 class="text-base font-semibold text-slate-900 mb-2">{{ $details['name'] }}</h3>
+                                <div class="space-y-2">
+                                    <h6 class="text-sm text-slate-900">
+                                        Size: <span class="ml-2 font-medium">{{ $details['size'] ?? 'M' }}</span>
+                                    </h6>
                                 </div>
-                            @endif
-                        </td>
-                        <td class="price-cell">
-                            @if(isset($item['discount_price']) && $item['discount_price'] > 0 && $item['discount_price'] < $item['original_price'])
-                                <div class="price-discount">₱{{ number_format($item['discount_price'], 2) }}</div>
-                                <div class="price-original"><s>₱{{ number_format($item['original_price'], 2) }}</s></div>
-                                <div class="discount-badge">SALE</div>
-                            @elseif(isset($item['original_price']) && $item['price'] < $item['original_price'])
-                                <div class="price-discount">₱{{ number_format($item['price'], 2) }}</div>
-                                <div class="price-original"><s>₱{{ number_format($item['original_price'], 2) }}</s></div>
-                                <div class="discount-badge">SALE</div>
-                            @else
-                                <div class="price-regular">₱{{ number_format($item['price'], 2) }}</div>
-                            @endif
-                        </td>
-                        <td>
-                            <!-- Auto-sync Quantity Form -->
-                            <form class="quantity-form" data-cart-id="{{ $id }}">
-                                @csrf
-                                <input type="hidden" name="id" value="{{ $id }}">
-                                <input type="hidden" name="size" value="{{ $item['size'] ?? 'M' }}">
-                                <input type="hidden" name="product_id" value="{{ $item['product_id'] ?? $id }}">
-                                
-                                <div class="quantity-controls">
-                                    <button type="button" class="qty-btn" onclick="decreaseQty(this)" {{ $item['quantity'] <= 1 ? 'disabled' : '' }}>−</button>
+
+                                <div class="mt-4 flex flex-wrap gap-4">
+                                    <button type="button" class="remove-from-cart font-medium text-black-500 text-sm flex items-center gap-2 cursor-pointer">
+                                        <img src="{{ asset('img/icons/delete.svg') }}" alt="delete icon">
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="ml-auto text-right">
+                                <div class="flex gap-2 items-center border border-gray-300 px-3 py-2 w-max rounded-full mb-4">
+                                    <button type="button" class="quantity-decrease cursor-pointer" data-id="{{ $id }}">-</button>
                                     <input type="number" 
-                                           name="quantity" 
-                                           value="{{ $item['quantity'] }}" 
+                                           value="{{ $details['quantity'] }}" 
                                            min="1" 
                                            max="{{ $currentStock }}"
-                                           class="qty-input"
-                                           data-stock="{{ $currentStock }}"
-                                           onchange="syncQuantityChange(this)"
-                                           data-original-value="{{ $item['quantity'] }}">
-                                    <button type="button" class="qty-btn" onclick="increaseQty(this)" {{ $item['quantity'] >= $currentStock ? 'disabled' : '' }}>+</button>
+                                           class="quantity-input w-12 text-center border-0 outline-none bg-transparent" 
+                                           readonly />
+                                    <button type="button" class="quantity-increase cursor-pointer" data-id="{{ $id }}" data-max="{{ $currentStock }}">+</button>
                                 </div>
-                                
-                                @if($item['quantity'] > $currentStock)
-                                    <div class="quantity-error">
-                                        Max available: {{ $currentStock }}
-                                    </div>
-                                @endif
-                            </form>
-                        </td>
-                        <td class="subtotal" data-subtotal="{{ $subtotal }}">₱{{ number_format($subtotal, 2) }}</td>
-                        <td>
-                            <!-- Auto-sync Remove Item Button -->
-                            <button type="button" class="btn-remove" onclick="syncRemoveItem('{{ $id }}')" data-cart-id="{{ $id }}">Remove</button>
-                        </td>
-                    </tr>
+                                <div class="mt-2">
+                                    <h4 class="text-base font-semibold text-slate-900 subtotal">₱{{ number_format($details['price'] * $details['quantity'], 2) }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 @endforeach
-            </tbody>
-            <tfoot>
-                <tr class="cart-total">
-                    <td colspan="5" class="total-label">Total:</td>
-                    <td class="subtotal" id="cart-total">₱{{ number_format($total, 2) }}</td>
-                </tr>
-                <tr>
-                    <td colspan="6" class="checkout-actions">
-                        <a href="{{ url('/home') }}" class="btn-continue">Continue Shopping</a>
+            </div>
 
-                        @if(auth()->check())
-                            {{-- Logged-in user: Form to proceed to checkout --}}
-                            <form action="{{ route('checkout_page') }}" method="GET" style="display: inline;">
-                                <button type="submit" class="btn-checkout">Proceed to Checkout</button>
-                            </form>
-                        @else
-                            {{-- Guest user: Show login modal --}}
-                            <button type="button" class="btn-checkout" onclick="showAuthModal()">Proceed to Checkout</button>
-                        @endif
-                    </td>
-                </tr>
+            <!-- Order Summary Section -->
+            <div class="border border-gray-200 rounded-xl shadow-sm p-6 lg:sticky lg:top-6 bg-white h-max w-full max-w-sm mx-auto">
+                <h3 class="text-lg font-semibold text-slate-900 border-b border-gray-300 pb-4 text-center">
+                    Order Summary
+                </h3>
 
-                {{-- Place the modal outside the table, preferably at the bottom of the page --}}
-                @guest
-                    <x-auth-modal />
-                @endguest
-            </tfoot>
-        </table>
+                <ul class="text-slate-600 font-medium divide-y divide-gray-200 mt-4">
+                    <li class="flex justify-between items-center text-sm py-3">
+                        <span>Subtotal</span>
+                        <span class="font-semibold text-slate-900" id="cart-total">₱{{ number_format($total, 2) }}</span>
+                    </li>
+                    <li class="flex justify-between items-center text-sm py-3">
+                        <span>Shipping</span>
+                        <span class="font-semibold text-slate-900">Calculated at checkout</span>
+                    </li>
+                    <li class="flex justify-between items-center text-sm py-3 font-semibold text-slate-900 text-base">
+                        <span>Total</span>
+                        <span id="cart-total-bottom">₱{{ number_format($total, 2) }}</span>
+                    </li>
+                </ul>
+
+                @if(auth()->check())
+                    <a href="{{ route('checkout_page') }}" 
+                    class="mt-6 text-sm font-semibold px-5 py-3 w-full rounded-md bg-[#020202] text-white text-center transition-all duration-300 hover:bg-[#762c21] hover:text-[#f4eedf] block">
+                        Proceed to Checkout
+                    </a>
+                @else
+                    <button type="button" 
+                            onclick="showAuthModal()" 
+                            class="mt-6 text-sm font-semibold px-5 py-3 w-full rounded-md bg-[#020202] text-white transition-all duration-300 hover:bg-[#762c21] hover:text-[#f4eedf]">
+                        Proceed to Checkout
+                    </button>
+                @endif
+
+                <a href="{{ route('shop-page') }}" 
+                class="mt-3 text-sm font-medium px-5 py-3 w-full rounded-md bg-gray-100 hover:bg-gray-200 text-slate-900 text-center transition block">
+                    Continue Shopping
+                </a>
+            </div>
+
+        @guest
+            <x-auth-modal />
+        @endguest
     @else
-        <div class="empty-cart">
-            <div class="empty-cart-icon">🛒</div>
-            <h2>Your cart is empty</h2>
-            <p>Add some products to get started!</p>
-            <a href="{{ url('/home') }}" class="btn-shop">Start Shopping</a>
+        <div class="flex flex-col items-center justify-center py-16 px-4">
+            <h2 class="text-2xl font-semibold text-slate-900 mb-2">Your cart is empty</h2>
+            <img src="{{ asset('img/icons/image for empty content.png') }}" class="mb-6" alt="">
+            <a href="{{ route('shop-page') }}" class="px-6 py-3 bg-[#020202] text-white text-center transition-all duration-300 hover:bg-[#762c21] hover:text-[#f4eedf] text-white font-medium rounded-md transition">Start Shopping</a>
         </div>
     @endif
 </div>
 
 <script>
-// Debounce timer for quantity changes
-let quantityTimer = null;
-
-function decreaseQty(button) {
-    const input = button.parentElement.querySelector('.qty-input');
-    const currentValue = parseInt(input.value);
-    if (currentValue > 1) {
-        input.value = currentValue - 1;
-        updateQuantityButtons(input);
-        syncQuantityChange(input);
-    }
-}
-
-function increaseQty(button) {
-    const input = button.parentElement.querySelector('.qty-input');
-    const currentValue = parseInt(input.value);
-    const maxStock = parseInt(input.dataset.stock);
-    if (currentValue < maxStock) {
-        input.value = currentValue + 1;
-        updateQuantityButtons(input);
-        syncQuantityChange(input);
-    }
-}
-
-function validateQuantity(input) {
-    const value = parseInt(input.value);
-    const maxStock = parseInt(input.dataset.stock);
-    
-    if (value > maxStock) {
-        input.value = maxStock;
-        showMessage(`Maximum available stock is ${maxStock}`, 'warning');
-    }
-    if (value < 1) {
-        input.value = 1;
-    }
-    
-    updateQuantityButtons(input);
-}
-
-function updateQuantityButtons(input) {
-    const container = input.parentElement;
-    const decreaseBtn = container.querySelector('.qty-btn:first-child');
-    const increaseBtn = container.querySelector('.qty-btn:last-child');
-    const value = parseInt(input.value);
-    const maxStock = parseInt(input.dataset.stock);
-    
-    decreaseBtn.disabled = value <= 1;
-    increaseBtn.disabled = value >= maxStock;
-}
-
-// New function to sync quantity changes via AJAX
-function syncQuantityChange(input) {
-    validateQuantity(input);
-    
-    const newQuantity = parseInt(input.value);
-    const originalQuantity = parseInt(input.dataset.originalValue);
-    
-    // Only sync if quantity actually changed
-    if (newQuantity === originalQuantity) return;
-    
-    // Clear previous timer
-    if (quantityTimer) {
-        clearTimeout(quantityTimer);
-    }
-    
-    // Debounce the request (wait 500ms after user stops typing/clicking)
-    quantityTimer = setTimeout(() => {
-        const form = input.closest('.quantity-form');
-        const formData = new FormData(form);
-        
-        showLoading(true);
-        
-        fetch('{{ route("update-cart") }}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update the original value
-                input.dataset.originalValue = newQuantity;
-                
-                // Update subtotal for this row
-                const row = input.closest('tr');
-                const subtotalCell = row.querySelector('.subtotal');
-                const price = parseFloat(data.item_price);
-                const newSubtotal = price * newQuantity;
-                subtotalCell.textContent = `₱${newSubtotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                subtotalCell.dataset.subtotal = newSubtotal;
-                
-                // Update total
-                updateCartTotal();
-                
-                showMessage('Cart updated successfully!', 'success');
-            } else {
-                // Revert to original quantity on error
-                input.value = originalQuantity;
-                updateQuantityButtons(input);
-                showMessage(data.message || 'Error updating cart', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            // Revert to original quantity on error
-            input.value = originalQuantity;
-            updateQuantityButtons(input);
-            showMessage('Network error. Please try again.', 'error');
-        })
-        .finally(() => {
-            showLoading(false);
-        });
-    }, 500);
-}
-
-// New function to sync item removal via AJAX
-function syncRemoveItem(cartId) {
-    if (!confirm('Remove this item from cart?')) return;
-    
-    showLoading(true);
-    
-    const formData = new FormData();
-    formData.append('id', cartId);
-    formData.append('_token', '{{ csrf_token() }}');
-    
-    fetch('{{ route("remove-from-cart") }}', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Remove the row from the table
-            const row = document.querySelector(`tr[data-cart-id="${cartId}"]`);
-            if (row) {
-                row.remove();
-            }
-            
-            // Update total
-            updateCartTotal();
-            
-            // Check if cart is empty
-            const tbody = document.getElementById('cart-tbody');
-            if (tbody.children.length === 0) {
-                // Reload page to show empty cart message
-                location.reload();
-            }
-            
-            showMessage('Item removed from cart!', 'success');
-        } else {
-            showMessage(data.message || 'Error removing item', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showMessage('Network error. Please try again.', 'error');
-    })
-    .finally(() => {
-        showLoading(false);
-    });
-}
-
-// Helper function to update cart total
-function updateCartTotal() {
+const updateCartTotals = (cartData) => {
     let total = 0;
-    document.querySelectorAll('.subtotal[data-subtotal]').forEach(cell => {
-        total += parseFloat(cell.dataset.subtotal);
-    });
-    
-    const totalElement = document.getElementById('cart-total');
-    if (totalElement) {
-        totalElement.textContent = `₱${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    }
-}
+    cartData.forEach(item => total += item.price * item.quantity);
+    document.getElementById('cart-total').textContent = '₱' + total.toFixed(2);
+    document.getElementById('cart-total-bottom').textContent = '₱' + total.toFixed(2);
+};
 
-// Helper function to show loading overlay
-function showLoading(show) {
-    const loading = document.getElementById('cart-loading');
-    if (loading) {
-        loading.style.display = show ? 'block' : 'none';
-    }
-}
+document.querySelectorAll('.quantity-increase, .quantity-decrease').forEach(button => {
+    button.addEventListener('click', function() {
+        const row = this.closest('.cart-row');
+        const input = row.querySelector('.quantity-input');
+        const id = this.dataset.id;
+        const max = parseInt(this.dataset.max || input.max);
+        let newQty = parseInt(input.value);
 
-// Helper function to show messages
-function showMessage(message, type) {
-    // Remove existing messages
-    document.querySelectorAll('.temp-message').forEach(msg => msg.remove());
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `temp-message ${type === 'success' ? 'success-message' : 'error-message'}`;
-    messageDiv.textContent = message;
-    messageDiv.style.marginBottom = '15px';
-    
-    const cartContainer = document.querySelector('.cart-container');
-    const title = cartContainer.querySelector('.cart-title');
-    cartContainer.insertBefore(messageDiv, title.nextSibling);
-    
-    // Auto-remove after 3 seconds
-    setTimeout(() => {
-        messageDiv.remove();
-    }, 3000);
-}
+        if (this.classList.contains('quantity-increase') && newQty < max) newQty++;
+        if (this.classList.contains('quantity-decrease') && newQty > 1) newQty--;
 
-function proceedToCheckout() {
-    // Check for stock issues before checkout
-    const warnings = document.querySelectorAll('.stock-warning');
-    const outOfStock = document.querySelectorAll('.stock-unavailable');
-    
-    if (warnings.length > 0 || outOfStock.length > 0) {
-        if (confirm('Some items in your cart have stock issues. Continue to checkout anyway?')) {
-            // Navigate to checkout PAGE (not submit route)
-            window.location.href = '{{ route("checkout_page") }}';
+        if (newQty !== parseInt(input.value)) {
+            input.value = newQty;
+
+            fetch('{{ route("update-cart") }}', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({ id, quantity: newQty })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Optionally update subtotal for this row
+                    const price = parseFloat(row.querySelector('.subtotal').textContent.replace('₱','')) / parseInt(input.value);
+                    row.querySelector('.subtotal').textContent = '₱' + (price * newQty).toFixed(2);
+                    // Reload page for flash messages
+                    window.location.reload();
+                }
+            });
         }
-    } else {
-        // Navigate to checkout PAGE (not submit route)
-        window.location.href = '{{ route("checkout_page") }}';
-    }
-}
-
-// Initialize quantity buttons on page load
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.qty-input').forEach(input => {
-        updateQuantityButtons(input);
     });
-    // Make it globally accessible
-    
-    function showAuthModal() {
-        document.getElementById('authModal').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeAuthModal() {
-        document.getElementById('authModal').style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-
-    // Close modal when clicking outside modal content
-    document.getElementById('authModal').addEventListener('click', function(e) {
-        if (e.target === this) closeAuthModal();
-    });
-
-    // Close modal on Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeAuthModal();
-    });
-
-    // Make it globally accessible
-    window.showAuthModal = showAuthModal;
 });
+
+document.querySelectorAll('.remove-from-cart').forEach(button => {
+    button.addEventListener('click', function() {
+        const row = this.closest('.cart-row');
+        const id = row.dataset.id;
+
+        if (!confirm('Are you sure you want to remove this item?')) return;
+
+        fetch('{{ route("remove-from-cart") }}', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ id })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) window.location.reload();
+        });
+    });
+});
+
+// Auth modal functions
+function showAuthModal() { document.getElementById('authModal').style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; document.body.style.overflow = 'auto'; }
+window.showAuthModal = showAuthModal;
+window.closeAuthModal = closeAuthModal;
 </script>
 @endsection

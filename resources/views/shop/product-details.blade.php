@@ -150,12 +150,48 @@
     </div>
 </div>
 
-
+<x-cart-confirmation/>
 <script>
     let selectedSize = '{{ $firstAvailableSize }}';
     let maxStock = {{ $firstAvailableSize ? $sizes[$firstAvailableSize] : 1 }};
 
-     function showAuthModal() {
+    // Intercept Add to Cart form submission
+    document.getElementById('add-to-cart-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const actionUrl = this.action;
+        
+        fetch(actionUrl, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update cart count in header
+                updateCartCount(data.cartCount);
+                
+                // Show confirmation modal
+                const message = data.message || 'Product added to cart successfully!';
+                document.getElementById('cartModalMessage').textContent = message;
+                showCartModal();
+            } else {
+                // Show error
+                alert(data.message || 'Something went wrong');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+
+    // Existing auth modal functions
+    function showAuthModal() {
         document.getElementById('authModal').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
@@ -166,13 +202,8 @@
     }
 
     // Close modal when clicking outside modal content
-    document.getElementById('authModal').addEventListener('click', function(e) {
+    document.getElementById('authModal')?.addEventListener('click', function(e) {
         if (e.target === this) closeAuthModal();
-    });
-
-    // Close modal on Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeAuthModal();
     });
 
     // Make it globally accessible

@@ -20,6 +20,17 @@
         </li>
 
         <li>
+            <a href="{{ route('orders.index') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-200 hover:text-black transition-colors duration-200 {{ request()->routeIs('orders.index') ? 'bg-black text-white' : '' }}">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="font-medium">All Orders</span>
+            </a>
+        </li>
+
+        
+
+        <li>
             <a href="{{ route('admin.show-product') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-200 hover:text-black transition-colors duration-200 {{ request()->routeIs('admin.show-product') ? 'bg-black text-white' : '' }}">
                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h3v-5a1 1 0 011-1h4a1 1 0 011 1v5h3a1 1 0 001-1V7l-7-5z" clip-rule="evenodd"></path>
@@ -38,15 +49,37 @@
         </li>
 
         <li>
-            <a href="{{ route('orders.index') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-200 hover:text-black transition-colors duration-200 {{ request()->routeIs('orders.index') ? 'bg-black text-white' : '' }}">
+            <a href="{{ route('admin.shipping-settings') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-200 hover:text-black transition-colors duration-200 {{ request()->routeIs('admin.categories') ? 'bg-black text-white' : '' }}">
                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"></path>
+                    <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path>
                 </svg>
-                <span class="font-medium">All Orders</span>
+                <span class="font-medium">Shipping Settings</span>
             </a>
         </li>
     </ul>
 </nav>
+
+<div class="pt-6 border-t border-gray-200">
+    <ul>
+        <li>
+            <a href="{{ route('admin.user-management') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-200 hover:text-black transition-colors duration-200 {{ request()->routeIs('admin.users') ? 'bg-black text-white' : '' }}">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 2a5 5 0 100 10 5 5 0 000-10zM2 18a8 8 0 1116 0H2z"></path>
+                </svg>
+                <span class="font-medium">User Management</span>
+            </a>
+        </li>
+
+        <li>
+            <a href="{{ route('admin.inbox') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-200 hover:text-black transition-colors duration-200 {{ request()->routeIs('admin.users') ? 'bg-black text-white' : '' }}">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 2a5 5 0 100 10 5 5 0 000-10zM2 18a8 8 0 1116 0H2z"></path>
+                </svg>
+                <span class="font-medium">Inbox</span>
+            </a>
+        </li>
+    </ul>
+</div>
 
 <!-- User Section -->
 <div class="pt-6 border-t border-gray-200">

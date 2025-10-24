@@ -3,7 +3,7 @@
     <div class="modal">
         <div class="modal-header">
             <button class="modal-close" onclick="closeAuthModal()" aria-label="Close">×</button>
-            <div class="modal-icon">🔐</div>
+            <div class="modal-icon"></div>
             <h2 class="modal-title">Login Required</h2>
             <p class="modal-subtitle">Authentication needed to proceed</p>
         </div>

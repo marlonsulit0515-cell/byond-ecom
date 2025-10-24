@@ -1,5 +1,5 @@
 body, html {
-    margin:0;
+    margin: 0;
     padding: 0; 
 }
 
@@ -8,8 +8,9 @@ ul {
     margin: 0;
     padding: 0;
 }
+
 .login-hero {
-    height: 100vh;
+    min-height: 100vh;
     display: grid;
     grid-template-rows: 30px 1fr;
 }
@@ -18,43 +19,70 @@ ul {
     background-color: #1F0C35;
 }
 
+.login-hero .login-cont {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
 .login-hero .login-cont img {
-    position: absolute;
-    left: 50%;
-    top: 15%;
-    width: 300px;
-    transform: translate(-50%, -15%);
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 40px;
 }
 
 .login-hero .form-login {
-    box-shadow: 5px 10px 12px #888888;
-    margin: 0;
-    width: 20%;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    box-shadow: 5px 10px 12px rgba(136, 136, 136, 0.3);
+    width: 100%;
+    max-width: 400px;
     background-color: #F5F5F5;
-    padding: 2%;
+    padding: 30px;
     border-radius: 8px;
     text-align: center;
+    box-sizing: border-box;
 }
 
 .login-hero .form-login h2 {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    margin-top: 0;
     color: #1F0C35;
+    font-size: 24px;
 }
 
 .login-hero .form-login .input-cont {
     padding: 10px 0;
+    text-align: left;
 }
 
 .login-hero .form-login .input-cont input {
     margin: 5px 0;
-    padding: 10px;
+    padding: 12px;
     width: 100%;
     border: solid 1px #D6D6D6;
     border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.login-hero .form-login .input-cont input:focus {
+    outline: none;
+    border-color: #565B7A;
+}
+
+.login-hero .form-login .input-cont.error input {
+    border-color: #e74c3c;
+}
+
+.login-hero .form-login .error-message {
+    color: #e74c3c;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+    text-align: left;
 }
 
 .login-hero .form-login .rememberme {
@@ -62,29 +90,84 @@ ul {
     justify-content: space-between;
     align-items: center;
     padding: 15px 0;
-    font-size: 11px;
+    font-size: 12px;
     color: black;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.login-hero .form-login .rememberme label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.login-hero .form-login .rememberme input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+}
+
+.login-hero .form-login .rememberme a {
+    color: #1F0C35;
+    text-decoration: none;
+}
+
+.login-hero .form-login .rememberme a:hover {
+    text-decoration: underline;
 }
 
 .login-hero .form-login .action {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.login-hero .form-login .action li {
+    flex: 1;
+    min-width: 120px;
+}
+
+.login-hero .form-login .action li button,
+.login-hero .form-login .action li a {
+    width: 100%;
+    display: inline-block;
+    box-sizing: border-box;
 }
 
 .login-hero .form-login .action li button {
     background-color: #565B7A;
     color: white;
     border: none;
-    padding: 10px 50px;
+    padding: 12px 20px;
     cursor: pointer;
     border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.login-hero .form-login .action li button:hover:not(:disabled) {
+    background-color: #464a63;
+}
+
+.login-hero .form-login .action li button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .login-hero .form-login .action li a {
     font-size: 13px;
     text-decoration: none;
     color: #1F0C35;
+    padding: 12px 20px;
+}
+
+.login-hero .form-login .action li a:hover {
+    text-decoration: underline;
 }
 
 /* Divider */
@@ -93,17 +176,20 @@ ul {
     align-items: center;
     text-align: center;
     color: #777;
-    margin: 15px 0;
+    margin: 20px 0;
     font-size: 12px;
 }
+
 .divider::before, .divider::after {
     content: '';
     flex: 1;
     border-bottom: 1px solid #D6D6D6;
 }
+
 .divider:not(:empty)::before {
     margin-right: .5em;
 }
+
 .divider:not(:empty)::after {
     margin-left: .5em;
 }
@@ -113,18 +199,19 @@ ul {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    margin-bottom: 15px;
 }
 
 .social-login a {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
+    padding: 12px 20px;
     text-decoration: none;
     font-size: 14px;
     border-radius: 5px;
-    font-weight: bold;
-    transition: background .3s;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 /* Google Button Animation */
@@ -134,8 +221,6 @@ ul {
     background: #fff;
     color: #444;
     border: 1px solid #D6D6D6;
-    padding: 10px 20px;
-    border-radius: 4px;
     cursor: pointer;
     z-index: 1;
     transition: color 0.4s ease;
@@ -144,8 +229,10 @@ ul {
 .google-btn::before {
     content: "";
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    top: 0; 
+    left: 0;
+    width: 100%; 
+    height: 100%;
     background: linear-gradient(90deg, #4285F4, #34A853, #FBBC05, #EA4335);
     opacity: 0;
     transition: opacity 1s ease;
@@ -169,8 +256,6 @@ ul {
     background: #fff;
     color: #444;
     border: 1px solid #D6D6D6;
-    padding: 10px 20px;
-    border-radius: 4px;
     cursor: pointer;
     z-index: 1;
     transition: color 0.4s ease;
@@ -179,8 +264,10 @@ ul {
 .facebook-btn::before {
     content: "";
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    top: 0; 
+    left: 0;
+    width: 100%; 
+    height: 100%;
     background: linear-gradient(135deg, #1877F2, #42A5F5, #166FE5, #0D47A1);
     opacity: 0;
     transition: opacity 1s ease;
@@ -200,4 +287,84 @@ ul {
 .social-login i {
     margin-right: 8px;
     font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .login-hero .login-cont img {
+        max-width: 200px;
+        margin-bottom: 30px;
+    }
+
+    .login-hero .form-login {
+        padding: 25px 20px;
+        max-width: 90%;
+    }
+
+    .login-hero .form-login h2 {
+        font-size: 20px;
+    }
+
+    .login-hero .form-login .rememberme {
+        font-size: 11px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .login-hero .form-login .action {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .login-hero .form-login .action li {
+        width: 100%;
+        min-width: unset;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-hero {
+        grid-template-rows: 20px 1fr;
+    }
+
+    .login-hero .login-cont img {
+        max-width: 160px;
+        margin-bottom: 20px;
+    }
+
+    .login-hero .form-login {
+        padding: 20px 15px;
+        max-width: 95%;
+    }
+
+    .login-hero .form-login h2 {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+
+    .login-hero .form-login .input-cont input {
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .login-hero .form-login .action li button {
+        padding: 10px 15px;
+        font-size: 13px;
+    }
+
+    .social-login a {
+        padding: 10px 15px;
+        font-size: 13px;
+    }
+
+    .social-login i {
+        font-size: 14px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .login-hero .form-login {
+        max-width: 450px;
+    }
 }

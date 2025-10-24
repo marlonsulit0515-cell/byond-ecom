@@ -1,19 +1,6 @@
 <!-- User Dashboard Navigation -->
 <nav class="space-y-2 mb-8">
     <ul class="space-y-2">
-
-        <!-- Overview -->
-        <li>
-            <a href="{{ route('user.dashboard') }}" 
-               class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-200 hover:text-black transition-colors duration-200 
-               {{ request()->routeIs('dashboard.index') ? 'bg-black text-white' : '' }}">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 3h14a2 2 0 012 2v4H1V5a2 2 0 012-2zm-2 9v3a2 2 0 002 2h14a2 2 0 002-2v-3H1z"></path>
-                </svg>
-                <span class="font-medium">Overview</span>
-            </a>
-        </li>
-
         <!-- My Orders -->
         <li>
             <a href="{{ route('user.orders') }}" 
