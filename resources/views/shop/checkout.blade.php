@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="https://fonts.cdnfonts.com/css/labor-union" rel="stylesheet">
     <link href="{{ asset('css/font-style.css') }}" rel="stylesheet" />
     <link href="{{ asset('css/screen-behavior.css') }}" rel="stylesheet" />
     
     <link rel="icon" type="image/png" href="{{ asset('img/logo/ByondLogo-Brown.png') }}">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://use.typekit.net/oov2wcw.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Checkout Page</title>
@@ -62,15 +62,15 @@
                                     @endphp
                                     <div class="flex items-start gap-4">
                                         <div class="w-24 h-24 flex p-3 shrink-0 bg-white rounded-md relative">
-                                            <img src="/product/{{ $item['image'] }}" class="w-full object-contain" alt="{{ $item['name'] }}" />
+                                            <img src="/product/{{ $item['image'] }}" class="w-full object-contain" alt="{{ e($item['name']) }}" />
                                             <span class="absolute -top-2 -right-2 bg-slate-700 text-white text-xs font-semibold rounded-full w-6 h-6 flex items-center justify-center">
                                                 {{ $item['quantity'] }}
                                             </span>
                                         </div>
                                         <div class="w-full">
-                                            <h3 class="text-sm font-semibold" style="color: #020202;">{{ $item['name'] }}</h3>
+                                            <h3 class="text-sm font-semibold" style="color: #020202;">{{ e($item['name']) }}</h3>
                                             @if(isset($item['size']) && $item['size'])
-                                                <p class="text-xs mt-1" style="color: #020202; opacity: 0.7;">Size: {{ $item['size'] }}</p>
+                                                <p class="text-xs mt-1" style="color: #020202; opacity: 0.7;">Size: {{ e($item['size']) }}</p>
                                             @endif
                                             <ul class="text-xs space-y-2 mt-3" style="color: #020202;">
                                                 <li class="flex flex-wrap gap-4">
@@ -102,7 +102,9 @@
                                     </li>
                                     <li class="flex flex-wrap gap-4 text-sm">
                                         Shipping 
-                                        <span class="ml-auto font-semibold" id="shipping-amount" style="color: #020202; opacity: 1;">Calculated at next step</span>
+                                        <span class="ml-auto font-semibold" id="shipping-amount" style="color: #020202; opacity: 1;">
+                                            <span id="shipping-fee-display">Select delivery method</span>
+                                        </span>
                                     </li>
                                     <hr class="border-gray-400" style="opacity: 0.3;" />
                                     <li class="flex flex-wrap gap-4 text-[15px] font-semibold" style="color: #020202;">
@@ -112,7 +114,7 @@
                                 </ul>
 
                                 <div class="mt-8 space-y-3">
-                                    <button type="submit" form="checkout-form" class="rounded-md px-4 py-2.5 w-full text-sm font-medium tracking-wide bg-blue-600 hover:bg-blue-700 text-white transition cursor-pointer" id="submit-btn">
+                                    <button type="submit" form="checkout-form" class="rounded-md px-4 py-2.5 w-full text-sm font-medium tracking-wide bg-blue-600 hover:bg-blue-700 text-white transition cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed" id="submit-btn">
                                         Complete Purchase
                                     </button>
                                     <a href="{{ route('view-cart') }}" class="block text-center rounded-md px-4 py-2.5 w-full text-sm font-medium tracking-wide bg-white border-2 border-gray-300 hover:border-gray-400 transition cursor-pointer" style="color: #020202;">
@@ -142,13 +144,14 @@
                                     value="{{ old('full_name', Auth::user()->name ?? '') }}" 
                                     required
                                     placeholder="Enter your full name"
+                                    maxlength="255"
                                     class="px-4 py-2.5 bg-white border border-gray-400 text-slate-900 w-full text-sm rounded-md focus:outline-blue-600 focus:border-blue-600" />
                                 @error('full_name')
                                     <span class="text-red-600 text-xs mt-1 block">{{ $message }}</span>
                                 @enderror
                             </div>
 
-                            <!-- Phone Number - REQUIRED by controller with specific format -->
+                            <!-- Phone Number -->
                             <div>
                                 <label class="text-sm text-slate-900 font-medium block mb-2">Phone Number</label>
                                 <input type="text" 
@@ -158,6 +161,7 @@
                                     required
                                     placeholder="+63 XXX XXX XXXX"
                                     maxlength="20"
+                                    pattern="^\+63\s\d{3}\s\d{3}\s\d{4}$"
                                     class="px-4 py-2.5 bg-white border border-gray-400 text-slate-900 w-full text-sm rounded-md focus:outline-blue-600 focus:border-blue-600" />
                                 <p class="text-xs text-slate-500 mt-1">Format: +63 XXX XXX XXXX</p>
                                 @error('phone')
@@ -178,19 +182,32 @@
                                     <option value="Philippines" selected>Philippines</option>
                                 </select>
                             </div>
+                            
+                            <!-- Province Dropdown -->
                             <div>
                                 <label class="text-sm text-slate-900 font-medium block mb-2">Province</label>
-                                <input type="text" name="province" value="{{ old('province') }}" required
-                                    placeholder="e.g. Cavite, Laguna, Cebu"
-                                    class="px-4 py-2.5 bg-white border border-gray-400 text-slate-900 w-full text-sm rounded-md focus:outline-blue-600 focus:border-blue-600" />
+                                <select name="province" id="province" required
+                                    class="px-4 py-2.5 bg-white border border-gray-400 text-slate-900 w-full text-sm rounded-md focus:outline-blue-600 focus:border-blue-600">
+                                    <option value="">Select Province</option>
+                                    @foreach($provinces as $province)
+                                        <option value="{{ $province->province }}" 
+                                            data-price="{{ $province->price }}"
+                                            {{ old('province') == $province->province ? 'selected' : '' }}>
+                                            {{ $province->province }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-slate-500 mt-1" id="province-shipping-info">Select a province to see shipping rates</p>
                                 @error('province')
                                     <span class="text-red-600 text-xs mt-1 block">{{ $message }}</span>
                                 @enderror
                             </div>
+                            
                             <div>
                                 <label class="text-sm text-slate-900 font-medium block mb-2">City / Municipality</label>
                                 <input type="text" name="city" value="{{ old('city') }}" required
                                     placeholder="e.g. Quezon City, Taguig"
+                                    maxlength="255"
                                     class="px-4 py-2.5 bg-white border border-gray-400 text-slate-900 w-full text-sm rounded-md focus:outline-blue-600 focus:border-blue-600" />
                                 @error('city')
                                     <span class="text-red-600 text-xs mt-1 block">{{ $message }}</span>
@@ -200,6 +217,7 @@
                                 <label class="text-sm text-slate-900 font-medium block mb-2">Barangay</label>
                                 <input type="text" name="barangay" value="{{ old('barangay') }}" required
                                     placeholder="e.g. Barangay 123"
+                                    maxlength="255"
                                     class="px-4 py-2.5 bg-white border border-gray-400 text-slate-900 w-full text-sm rounded-md focus:outline-blue-600 focus:border-blue-600" />
                                 @error('barangay')
                                     <span class="text-red-600 text-xs mt-1 block">{{ $message }}</span>
@@ -209,6 +227,7 @@
                                 <label class="text-sm text-slate-900 font-medium block mb-2">Postal Code</label>
                                 <input type="text" name="postal_code" value="{{ old('postal_code') }}" required
                                     placeholder="e.g. 1100"
+                                    maxlength="10"
                                     class="px-4 py-2.5 bg-white border border-gray-400 text-slate-900 w-full text-sm rounded-md focus:outline-blue-600 focus:border-blue-600" />
                                 @error('postal_code')
                                     <span class="text-red-600 text-xs mt-1 block">{{ $message }}</span>
@@ -218,6 +237,7 @@
                                 <label class="text-sm text-slate-900 font-medium block mb-2">Street Address</label>
                                 <input type="text" name="billing_address" value="{{ old('billing_address') }}" required
                                     placeholder="House number, street name, building"
+                                    maxlength="255"
                                     class="px-4 py-2.5 bg-white border border-gray-400 text-slate-900 w-full text-sm rounded-md focus:outline-blue-600 focus:border-blue-600" />
                                 @error('billing_address')
                                     <span class="text-red-600 text-xs mt-1 block">{{ $message }}</span>
@@ -231,11 +251,11 @@
                         <h2 class="text-xl text-slate-900 font-semibold mb-6">Shipping Options</h2>
                         <div class="mb-6">
                             <label class="text-sm text-slate-900 font-medium block mb-2">Delivery Method</label>
-                            <select name="delivery_option" required
+                            <select name="delivery_option" id="delivery_option" required
                                 class="px-4 py-2.5 bg-white border border-gray-400 text-slate-900 w-full text-sm rounded-md focus:outline-blue-600 focus:border-blue-600">
                                 <option value="">Select delivery option</option>
                                 <option value="ship" {{ old('delivery_option') == 'ship' ? 'selected' : '' }}>Ship to Address</option>
-                                <option value="pickup" {{ old('delivery_option') == 'pickup' ? 'selected' : '' }}>Store Pickup</option>
+                                <option value="pickup" {{ old('delivery_option') == 'pickup' ? 'selected' : '' }}>Store Pickup (Free)</option>
                             </select>
                             @error('delivery_option')
                                 <span class="text-red-600 text-xs mt-1 block">{{ $message }}</span>
@@ -255,6 +275,7 @@
                             <label class="text-sm text-slate-900 font-medium block mb-2">Complete Shipping Address</label>
                             <input type="text" id="shipping_address" name="shipping_address" value="{{ old('shipping_address') }}"
                                 placeholder="Enter complete shipping address if different"
+                                maxlength="255"
                                 class="px-4 py-2.5 bg-white border border-gray-400 text-slate-900 w-full text-sm rounded-md focus:outline-blue-600 focus:border-blue-600" />
                             @error('shipping_address')
                                 <span class="text-red-600 text-xs mt-1 block">{{ $message }}</span>
@@ -305,113 +326,14 @@
         </div>
     @endif
 </div>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const sameAsBillingCheckbox = document.getElementById('same_as_billing');
-    const shippingAddressGroup = document.getElementById('shipping_address_group');
-    const shippingAddressInput = document.getElementById('shipping_address');
-    const form = document.getElementById('checkout-form');
-    const submitButton = document.getElementById('submit-btn');
-    const paymentOptions = document.querySelectorAll('.payment-option');
-
-    // Toggle shipping address visibility
-    if (sameAsBillingCheckbox) {
-        sameAsBillingCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                shippingAddressGroup.style.display = 'none';
-                shippingAddressInput.removeAttribute('required');
-            } else {
-                shippingAddressGroup.style.display = 'block';
-                shippingAddressInput.setAttribute('required', 'required');
-            }
-        });
-    }
-
-    // Payment option selection
-    paymentOptions.forEach(option => {
-        const radio = option.querySelector('input[type="radio"]');
-        
-        option.addEventListener('click', function(e) {
-            if (e.target.tagName !== 'INPUT') {
-                radio.checked = true;
-                radio.dispatchEvent(new Event('change'));
-            }
-        });
-
-        radio.addEventListener('change', function() {
-            paymentOptions.forEach(opt => {
-                opt.classList.remove('border-blue-600', 'bg-blue-50');
-                opt.classList.add('border-gray-300', 'bg-gray-100');
-            });
-            if (this.checked) {
-                option.classList.remove('border-gray-300', 'bg-gray-100');
-                option.classList.add('border-blue-600', 'bg-blue-50');
-            }
-        });
-    });
-
-    // Form submission with loading state
-    if (form && submitButton) {
-        form.addEventListener('submit', function(e) {
-            // Validate payment method is selected
-            const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-            if (!paymentMethod) {
-                e.preventDefault();
-                alert('Please select a payment method');
-                return false;
-            }
-
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Processing...';
-            
-            setTimeout(() => {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Complete Purchase';
-            }, 10000);
-        });
-    }
-
-    // Phone number formatting (Philippine format) - CRITICAL for controller validation
-    const phoneInput = document.getElementById('phone');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            
-            // Handle Philippine phone format
-            if (value.length > 0 && !value.startsWith('63')) {
-                if (value.startsWith('0')) {
-                    value = '63' + value.substring(1);
-                } else if (value.startsWith('9')) {
-                    value = '63' + value;
-                }
-            }
-            
-            // Format: +63 XXX XXX XXXX
-            if (value.length >= 2) {
-                value = '+' + value.substring(0, 2) + ' ' + value.substring(2);
-            }
-            if (value.length > 7) {
-                value = value.substring(0, 7) + ' ' + value.substring(7);
-            }
-            if (value.length > 11) {
-                value = value.substring(0, 11) + ' ' + value.substring(11, 15);
-            }
-            
-            e.target.value = value;
-        });
-
-        // Validate on blur
-        phoneInput.addEventListener('blur', function() {
-            const phoneRegex = /^\+63\s\d{3}\s\d{3}\s\d{4}$/;
-            if (this.value && !phoneRegex.test(this.value)) {
-                this.setCustomValidity('Please enter a valid Philippine phone number (+63 XXX XXX XXXX)');
-            } else {
-                this.setCustomValidity('');
-            }
-        });
-    }
-});
+    window.checkoutData = {
+        subtotal: @json($subtotal),
+        calculateShippingUrl: @json(route('calculate.shipping')),
+        csrfToken: @json(csrf_token()),
+    };
 </script>
+
+<script src="{{ asset('script/checkout.js') }}"></script>
 </body>
 </html>

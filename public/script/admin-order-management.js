@@ -1,9 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    /**
-     * ---------------------------
-     * FILTER BY STATUS (Stat Cards)
-     * ---------------------------
-     */
+
     function filterByStatus(status) {
         const statusFilter = document.getElementById('statusFilter');
         if (statusFilter) statusFilter.value = status;
@@ -75,106 +71,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    /**
-        ---------------------------
-        BULK SELECTION FUNCTIONS
-        ---------------------------
-     */
-    function updateSelection() {
-        const checkboxes = document.querySelectorAll('.order-checkbox:checked');
-        const selectedIds = Array.from(checkboxes).map(cb => cb.value);
-
-        // Reset hidden inputs
-        document.querySelectorAll('input[name="order_ids[]"]').forEach(el => el.remove());
-
-        // Append hidden inputs
-        const form = document.querySelector('.bulk-actions-form');
-        if (form) {
-            selectedIds.forEach(id => {
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.name = 'order_ids[]';
-                hiddenInput.value = id;
-                form.appendChild(hiddenInput);
-            });
-        }
-
-        // Update UI count
-        const countEl = document.getElementById('selectedCount');
-        if (countEl) countEl.textContent = selectedIds.length;
-
-        // Show/hide bulk actions
-        const bulkActions = document.getElementById('bulkActions');
-        if (bulkActions) {
-            bulkActions.style.display = selectedIds.length > 0 ? 'block' : 'none';
-        }
-    }
-
-    function toggleSelectAll() {
-        const selectAll = document.getElementById('selectAll');
-        if (!selectAll) return;
-
-        document.querySelectorAll('.order-checkbox').forEach(cb => {
-            cb.checked = selectAll.checked;
-        });
-        updateSelection();
-    }
-
-    function clearSelection() {
-        document.querySelectorAll('.order-checkbox, #selectAll').forEach(cb => {
-            cb.checked = false;
-        });
-        document.querySelectorAll('input[name="order_ids[]"]').forEach(el => el.remove());
-        updateSelection();
-    }
-
-    function toggleStatusMenu(orderId) {
-        const menu = document.getElementById(`statusMenu-${orderId}`);
-        const isShown = menu.classList.contains('show');
-        
-        // Close all menus
-        document.querySelectorAll('.dropdown-menu').forEach(m => {
-            m.classList.remove('show');
-        });
-        
-        // Toggle current menu
-        if (!isShown) {
-            menu.classList.add('show');
-        }
-    }
-
-    // Expose globally
-    window.updateSelection = updateSelection;
-    window.toggleSelectAll = toggleSelectAll;
-    window.clearSelection = clearSelection;
-    window.toggleStatusMenu = toggleStatusMenu;
-
-    /**
-        --------------------------
-         BULK FORM VALIDATION
-        ---------------------------
-     */
-    const bulkForm = document.getElementById('bulkForm');
-    if (bulkForm) {
-        bulkForm.addEventListener('submit', function(e) {
-            const selectedInputs = document.querySelectorAll('input[name="order_ids[]"]');
-            const statusSelect = bulkForm.querySelector('select[name="status"]');
-
-            if (selectedInputs.length === 0) {
-                e.preventDefault();
-                alert('Please select at least one order.');
-                return;
-            }
-            if (statusSelect && !statusSelect.value) {
-                e.preventDefault();
-                alert('Please select a status.');
-                return;
-            }
-            if (!confirm(`Are you sure you want to update ${selectedInputs.length} order(s)?`)) {
-                e.preventDefault();
-            }
-        });
-    }
 
     /**
      * ---------------------------

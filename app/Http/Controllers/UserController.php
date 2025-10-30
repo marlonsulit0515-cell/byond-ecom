@@ -5,11 +5,18 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Order;
+use App\Models\OrderStatusLog;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Routing\Controller as BaseController;
 
 class UserController extends BaseController
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
         // Only select needed columns
@@ -19,29 +26,12 @@ class UserController extends BaseController
         
         return view('home', compact('product'));
     }
+
     public function user_dashboard()
     {
-        return view('UserPanel.userdash'); // Assuming you have a view named 'shop.shop-page'
-    }
-    public function __construct()
-    {
-        $this->middleware('auth');
+        return view('UserPanel.userdash');
     }
 
-    // Fixed myOrders method
-    public function myOrders()
-    {
-        $user = Auth::user();
-
-        $orders = Order::with(['items', 'payment'])
-            ->where('user_id', $user->id)
-            ->latest()
-            ->get();
-
-        return view('UserPanel.user-orders', compact('orders'));
-    }
-
-    // Your dashboard method (looks good)
     public function dashboard()
     {
         $user = Auth::user();
@@ -101,7 +91,6 @@ class UserController extends BaseController
         return view('UserPanel.user-orders', compact('orders'));
     }
 
-    // Your orderDetails method (looks good)
     public function orderDetails($id)
     {
         $user = Auth::user();
@@ -113,7 +102,6 @@ class UserController extends BaseController
         return view('UserPanel.order-reciept', compact('order'));
     }
 
-    // Your getOrderStatus method (looks good)
     public function getOrderStatus($id)
     {
         $user = Auth::user();
@@ -136,49 +124,83 @@ class UserController extends BaseController
         ]);
     }
 
-    // Additional methods you might need:
-
-    public function cancelOrder($id)
+    /**
+     * Request cancellation (User requests to cancel order)
+     * Only allows requesting cancellation for pending or processing orders
+     */
+    public function requestCancellation($id)
     {
         $user = Auth::user();
         
         $order = $user->orders()->findOrFail($id);
         
-        // Only allow cancellation if order is pending
-        if ($order->status !== 'pending') {
+        // Only allow cancellation request if order is pending or processing
+        if (!in_array($order->status, ['pending', 'processing'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Order cannot be cancelled at this stage.'
-            ]);
+            ], 400);
         }
 
-        $order->update(['status' => 'cancelled']);
+        // Check if already requested
+        if ($order->status === 'cancellation_requested') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cancellation has already been requested for this order.'
+            ], 400);
+        }
+
+        DB::transaction(function() use ($order) {
+            $order->update(['status' => 'cancellation_requested']);
+            
+            // Log the status change
+            OrderStatusLog::create([
+                'order_id' => $order->id,
+                'status' => 'cancellation_requested',
+                'changed_at' => now(),
+            ]);
+        });
 
         return response()->json([
             'success' => true,
-            'message' => 'Order cancelled successfully.'
+            'message' => 'Cancellation request submitted successfully. Waiting for admin approval.',
+            'orderNumber' => $order->order_number
         ]);
     }
 
+    /**
+     * Confirm delivery (User marks order as received)
+     * Only allows confirmation if order is shipped
+     */
     public function confirmDelivery($id)
     {
         $user = Auth::user();
         
         $order = $user->orders()->findOrFail($id);
         
-        // Only allow confirmation if order is delivered
-        if ($order->status !== 'delivered') {
+        // Only allow confirmation if order is shipped
+        if ($order->status !== 'shipped') {
             return response()->json([
                 'success' => false,
-                'message' => 'Order is not yet delivered.'
-            ]);
+                'message' => 'Order is not yet shipped or already completed.'
+            ], 400);
         }
 
-        $order->update(['status' => 'completed']);
+        DB::transaction(function() use ($order) {
+            $order->update(['status' => 'completed']);
+            
+            // Log the status change
+            OrderStatusLog::create([
+                'order_id' => $order->id,
+                'status' => 'completed',
+                'changed_at' => now(),
+            ]);
+        });
 
         return response()->json([
             'success' => true,
-            'message' => 'Delivery confirmed successfully.'
+            'message' => 'Delivery confirmed successfully. Thank you for your order!',
+            'orderNumber' => $order->order_number
         ]);
     }
 
@@ -204,6 +226,4 @@ class UserController extends BaseController
         return redirect()->route('profile.edit')
             ->with('success', 'Profile updated successfully!');
     }
-
-
 }

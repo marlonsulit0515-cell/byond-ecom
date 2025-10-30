@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrderStatusLog extends Model
 {
-    protected $fillable = ['order_id', 'status', 'changed_at'];
+    protected $fillable = ['order_id', 'status', 'tracking_number', 'changed_at'];
 
     protected $casts = [
         'changed_at' => 'datetime',

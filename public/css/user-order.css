@@ -26,6 +26,16 @@
     color: #868e96;
     margin-bottom: 24px;
 }
+.order-card,
+.bg-white.rounded-lg {
+    position: relative;
+    z-index: 1;
+}
+
+/* Prevent fixed elements in order cards from overlapping */
+.order-card button[class*="fixed"] {
+    z-index: 1;
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {

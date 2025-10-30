@@ -209,93 +209,55 @@
 </section>
 
 </div>
+{{--
+         LATEST BLOG PREVIEW SECTION
+         Static preview of most recent blog post
+         --}}
+    <div class="latestblog mt-16">
+        <h1>LATEST BLOG</h1> 
 
-    <div class="latestblog mt-16 border-t-4 border-b-4 border-black py-10 bg-gray-50">
-  <h1 class="text-center text-3xl font-extrabold text-gray-900 mb-8 tracking-wide">
-    LATEST BLOG
-  </h1>
-
-  <div class="relative overflow-hidden">
-    <!-- Carousel container -->
-    <div id="blogCarousel" class="flex transition-transform duration-500 ease-in-out">
-      
-      <!-- Blog Item -->
-      <div class="min-w-full flex flex-col items-center text-center px-6">
-        <img src="{{ asset('img/blog/BlogImg.png') }}" alt="Blog Image" class="w-full max-w-sm rounded-xl shadow-md">
-        <span class="text-gray-600 text-sm mt-3">August 20, 2025</span>
-        <h2 class="text-xl font-semibold mt-2 text-gray-800">BYOND EVENT IN MALL OF ASIA</h2>
-        <p class="text-gray-600 mt-2 text-base leading-relaxed">
-          Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam.
-        </p>
-        <a href="{{ url('/blog_content1') }}" 
-           class="mt-4 inline-block bg-black text-white text-sm font-semibold px-5 py-2 rounded-full hover:bg-gray-800 transition">
-           READ MORE
-        </a>
-      </div>
-
-      <!-- Blog Item -->
-      <div class="min-w-full flex flex-col items-center text-center px-6">
-        <img src="{{ asset('img/blog/BlogImg.png') }}" alt="Blog Image" class="w-full max-w-sm rounded-xl shadow-md">
-        <span class="text-gray-600 text-sm mt-3">August 20, 2025</span>
-        <h2 class="text-xl font-semibold mt-2 text-gray-800">BYOND EVENT IN MALL OF ASIA</h2>
-        <p class="text-gray-600 mt-2 text-base leading-relaxed">
-          Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam.
-        </p>
-        <a href="{{ url('/blog_content2') }}" 
-           class="mt-4 inline-block bg-black text-white text-sm font-semibold px-5 py-2 rounded-full hover:bg-gray-800 transition">
-           READ MORE
-        </a>
-      </div>
-
-      <!-- Blog Item -->
-      <div class="min-w-full flex flex-col items-center text-center px-6">
-        <img src="{{ asset('img/blog/BlogImg.png') }}" alt="Blog Image" class="w-full max-w-sm rounded-xl shadow-md">
-        <span class="text-gray-600 text-sm mt-3">August 20, 2025</span>
-        <h2 class="text-xl font-semibold mt-2 text-gray-800">BYOND EVENT IN MALL OF ASIA</h2>
-        <p class="text-gray-600 mt-2 text-base leading-relaxed">
-          Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam.
-        </p>
-        <a href="{{ url('/blog_content3') }}" 
-           class="mt-4 inline-block bg-black text-white text-sm font-semibold px-5 py-2 rounded-full hover:bg-gray-800 transition">
-           READ MORE
-        </a>
-      </div>
-
-      <!-- Blog Item -->
-      <div class="min-w-full flex flex-col items-center text-center px-6">
-        <img src="{{ asset('img/blog/BlogImg.png') }}" alt="Blog Image" class="w-full max-w-sm rounded-xl shadow-md">
-        <span class="text-gray-600 text-sm mt-3">August 20, 2025</span>
-        <h2 class="text-xl font-semibold mt-2 text-gray-800">BYOND EVENT IN MALL OF ASIA</h2>
-        <p class="text-gray-600 mt-2 text-base leading-relaxed">
-          Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam.
-        </p>
-        <a href="{{ url('/blog_content4') }}" 
-           class="mt-4 inline-block bg-black text-white text-sm font-semibold px-5 py-2 rounded-full hover:bg-gray-800 transition">
-           READ MORE
-        </a>
-      </div>
-
+        <div class="blog-cont">
+            <ul>
+            <li><img src="{{ asset('img/blog/BlogImg.png') }}" alt=""></li>
+            <li><span>August 20, 2025</span></li>
+            <li><h2>BYOND EVENT IN MALL OF ASIA</h2></li>
+            <li>
+                <p>LLorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam</p>
+            </li> 
+            <li><a href="{{ url('/blog_content1') }}">READ MORE</a></li>
+        </ul>
+        
+           <ul>
+            <li><img src="{{ asset('img/blog/BlogImg.png') }}" alt=""></li>
+            <li><span>August 20, 2025</span></li>
+            <li><h2>BYOND EVENT IN MALL OF ASIA</h2></li>
+            <li>
+                <p>LLorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam</p>
+            </li> 
+            <li><a href="{{ url('/blog_content2') }}">READ MORE</a></li>
+        </ul>
+           <ul>
+            <li><img src="{{ asset('img/blog/BlogImg.png') }}" alt=""></li>
+            <li><span>August 20, 2025</span></li>
+            <li><h2>BYOND EVENT IN MALL OF ASIA</h2></li>
+            <li>
+                <p>LLorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam</p>
+            </li> 
+            <li><a href="{{ url('/blog_content3') }}">READ MORE</a></li>
+        </ul>
+          <ul>
+            <li><img src="{{ asset('img/blog/BlogImg.png') }}" alt=""></li>
+            <li><span>August 20, 2025</span></li>
+            <li><h2>BYOND EVENT IN MALL OF ASIA</h2></li>
+            <li>
+                <p>LLorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam</p>
+            </li> 
+            <li><a href="{{ url('/blog_content4') }}">READ MORE</a></li>
+        </ul>
+        </div>
+        
+        
     </div>
-
-    <!-- Navigation Buttons -->
-    <button id="prevBtn" 
-      class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black text-white rounded-full p-2 hover:bg-gray-800">
-      &#10094;
-    </button>
-    <button id="nextBtn" 
-      class="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black text-white rounded-full p-2 hover:bg-gray-800">
-      &#10095;
-    </button>
-  </div>
-
-  <!-- Dots Navigation -->
-  <div class="flex justify-center mt-6 space-x-2">
-    <span class="dot w-3 h-3 bg-gray-400 rounded-full cursor-pointer" data-index="0"></span>
-    <span class="dot w-3 h-3 bg-gray-300 rounded-full cursor-pointer" data-index="1"></span>
-    <span class="dot w-3 h-3 bg-gray-300 rounded-full cursor-pointer" data-index="2"></span>
-    <span class="dot w-3 h-3 bg-gray-300 rounded-full cursor-pointer" data-index="3"></span>
-  </div>
-</div>
     <div class="my-20 text-center max-w-3xl mx-auto px-6">
         <h2 class="text-4xl font-bold tracking-wide mb-6 text-gray-900">
             BYOND CO.

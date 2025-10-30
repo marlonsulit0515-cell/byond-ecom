@@ -38,6 +38,10 @@
                     {{ request('status') == 'cancelled' ? 'selected' : '' }}>
                 Cancelled
             </option>
+            <option value="{{ route('user.orders', ['status' => 'cancellation_requested']) }}" 
+                    {{ request('status') == 'cancellation_requested' ? 'selected' : '' }}>
+                Cancellation Requested
+            </option>
             <option value="{{ route('user.orders', ['status' => 'return_refund']) }}" 
                     {{ request('status') == 'return_refund' ? 'selected' : '' }}>
                 Return/Refund
@@ -78,6 +82,11 @@
                {{ request('status') == 'cancelled' ? 'border-black text-black bg-gray-50' : 'border-transparent text-gray-600 hover:text-black hover:bg-gray-50' }}">
                 Cancelled
             </a>
+            <a href="{{ route('user.orders', ['status' => 'cancellation_requested']) }}" 
+               class="flex-1 px-4 lg:px-6 py-4 text-center font-medium text-sm transition-colors duration-200 border-b-2 whitespace-nowrap
+               {{ request('status') == 'cancellation_requested' ? 'border-black text-black bg-gray-50' : 'border-transparent text-gray-600 hover:text-black hover:bg-gray-50' }}">
+                Cancellation Requested
+            </a>
             <a href="{{ route('user.orders', ['status' => 'return_refund']) }}" 
                class="flex-1 px-4 lg:px-6 py-4 text-center font-medium text-sm transition-colors duration-200 border-b-2 whitespace-nowrap
                {{ request('status') == 'return_refund' ? 'border-black text-black bg-gray-50' : 'border-transparent text-gray-600 hover:text-black hover:bg-gray-50' }}">
@@ -99,6 +108,22 @@
                             <span class="text-sm font-semibold text-gray-900">Order #{{ $order->order_number }}</span>
                             <span class="text-xs sm:text-sm text-gray-500">{{ $order->created_at->format('M d, Y - h:i A') }}</span>
                         </div>
+                        
+                        <!-- Tracking Number - NEW -->
+                        @if($order->tracking_number && in_array($order->status, ['shipped', 'completed']))
+                            <div class="mt-2 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="text-xs text-gray-600">Tracking:</span>
+                                <span class="text-xs font-semibold text-blue-600 select-all">{{ $order->tracking_number }}</span>
+                                <button onclick="copyTrackingNumber('{{ $order->tracking_number }}')" 
+                                        class="text-xs text-blue-600 hover:text-blue-800 underline"
+                                        title="Copy tracking number">
+                                    Copy
+                                </button>
+                            </div>
+                        @endif
                     </div>
                     <div class="self-start sm:self-auto">
                         <span class="inline-flex items-center px-2.5 md:px-3 py-1 rounded-full text-xs font-medium
@@ -107,6 +132,7 @@
                             {{ $order->status == 'cancelled' ? 'bg-red-100 text-red-800' : '' }}
                             {{ $order->status == 'processing' ? 'bg-blue-100 text-blue-800' : '' }}
                             {{ $order->status == 'shipped' ? 'bg-purple-100 text-purple-800' : '' }}
+                            {{ $order->status == 'cancellation_requested' ? 'bg-orange-100 text-orange-800' : '' }}
                         ">
                             {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                         </span>
@@ -164,29 +190,35 @@
 
                     <!-- Action Buttons -->
                     <div class="flex flex-col gap-2">
-                        @if($order->status == 'pending')
-                            <button class="w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors order-action-btn" 
+                        @if($order->status == 'pending' || $order->status == 'processing')
+                            <button class="w-full px-4 py-2.5 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors order-action-btn" 
                                     data-id="{{ $order->id }}" 
-                                    data-action="cancel">
-                                Cancel Order
+                                    data-action="request-cancel">
+                                Request Cancellation
                             </button>
                         @endif
 
+                        @if($order->status == 'cancellation_requested')
+                            <div class="w-full px-4 py-2.5 text-sm font-medium text-orange-600 bg-orange-50 border border-orange-300 rounded-lg text-center">
+                                Cancellation Pending Approval
+                            </div>
+                        @endif
+
                         @if($order->status == 'processing')
-                            <button class="w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                                <a href="{{ route('view.contact') }}">Contact Us</a>    
-                            </button>
+                            <a href="{{ route('view.contact') }}" class="w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-center no-underline">
+                                Contact Us
+                            </a>
                         @endif
 
                         @if($order->status == 'shipped')
                             <button class="w-full px-4 py-2.5 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition-colors order-action-btn" 
                                     data-id="{{ $order->id }}" 
-                                    data-action="received">
+                                    data-action="confirm-delivery">
                                 Order Received
                             </button>
-                            <button class="w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                                <a href="{{ route('view.contact') }}">Contact Us</a>
-                            </button>
+                            <a href="{{ route('view.contact') }}" class="w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-center no-underline">
+                                Contact Us
+                            </a>
                         @endif
 
                         @if($order->status == 'completed')
@@ -223,27 +255,33 @@
 
                         <!-- Action Buttons -->
                         <div class="flex gap-2 flex-wrap">
-                            @if($order->status == 'pending')
-                                <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors order-action-btn" 
+                            @if($order->status == 'pending' || $order->status == 'processing')
+                                <button class="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors order-action-btn" 
                                         data-id="{{ $order->id }}" 
-                                        data-action="cancel">
-                                    Cancel Order
+                                        data-action="request-cancel">
+                                    Request Cancellation
                                 </button>
+                            @endif
+
+                            @if($order->status == 'cancellation_requested')
+                                <div class="px-4 py-2 text-sm font-medium text-orange-600 bg-orange-50 border border-orange-300 rounded-lg">
+                                    Cancellation Pending Approval
+                                </div>
                             @endif
 
                             @if($order->status == 'processing')
-                                <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                <a href="{{ route('view.contact') }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors no-underline">
                                     Contact Us
-                                </button>
+                                </a>
                             @endif
 
                             @if($order->status == 'shipped')
-                                <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                <a href="{{ route('view.contact') }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors no-underline">
                                     Contact Us
-                                </button>
+                                </a>
                                 <button class="px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition-colors order-action-btn" 
                                         data-id="{{ $order->id }}" 
-                                        data-action="received">
+                                        data-action="confirm-delivery">
                                     Order Received
                                 </button>
                             @endif
@@ -281,6 +319,22 @@
 </div>
 
 <script>
+// Copy tracking number to clipboard
+function copyTrackingNumber(trackingNumber) {
+    navigator.clipboard.writeText(trackingNumber).then(function() {
+        showUserNotification('Tracking number copied to clipboard!', 'success');
+    }, function(err) {
+        // Fallback for older browsers
+        const tempInput = document.createElement('input');
+        tempInput.value = trackingNumber;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        showUserNotification('Tracking number copied to clipboard!', 'success');
+    });
+}
+
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('order-action-btn')) {
         const orderId = e.target.getAttribute('data-id');
@@ -292,16 +346,28 @@ document.addEventListener('click', function(e) {
 function handleUserOrderAction(orderId, action, event) {
     const button = event.target;
     const originalText = button.textContent;
+    
+    // Confirmation dialog for cancellation request
+    if (action === 'request-cancel') {
+        if (!confirm('Are you sure you want to request cancellation for this order? The admin will review your request.')) {
+            return;
+        }
+    }
+    
     button.textContent = 'Processing...';
     button.disabled = true;
 
     let endpoint = '';
+    let successMessage = '';
+    
     switch(action) {
-        case 'received':
-            endpoint = `/user/orders/${orderId}/received`;
+        case 'confirm-delivery':
+            endpoint = `/user/orders/${orderId}/confirm-delivery`;
+            successMessage = 'marked as received';
             break;
-        case 'cancel':
-            endpoint = `/user/orders/${orderId}/cancel`;
+        case 'request-cancel':
+            endpoint = `/user/orders/${orderId}/request-cancellation`;
+            successMessage = 'cancellation requested';
             break;
         default:
             button.textContent = originalText;
@@ -317,26 +383,31 @@ function handleUserOrderAction(orderId, action, event) {
             'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(err => Promise.reject(err));
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.success) {
-            showUserNotification(`Order #${data.orderNumber} ${action === 'received' ? 'marked as received' : 'cancelled'} successfully`, 'success');
-            setTimeout(() => window.location.reload(), 1000);
+            showUserNotification(`Order #${data.orderNumber} ${successMessage} successfully`, 'success');
+            setTimeout(() => window.location.reload(), 1500);
         } else {
             throw new Error(data.message || 'Action failed');
         }
     })
     .catch(error => {
-        showUserNotification(`Failed to ${action} order`, 'error');
+        const message = error.message || `Failed to ${action.replace('-', ' ')} order`;
+        showUserNotification(message, 'error');
         console.error('Error:', error);
-    })
-    .finally(() => {
         button.textContent = originalText;
         button.disabled = false;
     });
 }
 
 function showUserNotification(message, type) {
+    // You can replace this with a better notification system
     alert(message);
 }
 </script>

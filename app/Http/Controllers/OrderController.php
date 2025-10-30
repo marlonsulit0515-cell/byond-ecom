@@ -9,376 +9,394 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
-
 class OrderController extends Controller
 {
     /**
      * Display a listing of orders
      */
-    public function index(Request $request)
-    {
-        
-        $query = Order::with(['user', 'items', 'payment']);//fetch data of user's items and payment
+        public function index(Request $request)
+        {
+            $query = Order::with(['user', 'items', 'payment']);
 
-        // Filter by status if provided
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+            // Filter by status if provided
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
 
-        // Search by order number, customer name, or email
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('order_number', 'like', "%{$search}%")
-                ->orWhere('full_name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhereHas('user', function($userQuery) use ($search) {
-                    $userQuery->where('email', 'like', "%{$search}%")
-                            ->orWhere('name', 'like', "%{$search}%");
+            // Search by order number, customer name, or email
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('full_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('user', function($userQuery) use ($search) {
+                        $userQuery->where('email', 'like', "%{$search}%")
+                                ->orWhere('name', 'like', "%{$search}%");
+                    });
                 });
-            });
+            }
+
+            // Apply sorting
+            switch ($request->sort) {
+                case 'total_asc':
+                    $query->orderBy('total', 'asc');
+                    break;
+                case 'total_desc':
+                    $query->orderBy('total', 'desc');
+                    break;
+                case 'date_asc':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                case 'date_desc':
+                    $query->orderBy('created_at', 'desc');
+                    break;
+                default:
+                    // Default to latest (newest first)
+                    $query->orderBy('created_at', 'desc');
+            }
+
+            $orders = $query->paginate(30);
+
+            // Global count (ignores filters)
+            $allOrdersCount = Order::count();
+
+            // Per-status counts (use single grouped query for efficiency)
+            $statusCounts = Order::select('status', DB::raw('count(*) as total'))
+                ->groupBy('status')
+                ->pluck('total', 'status')
+                ->map(fn($count) => (int) $count)
+                ->toArray();
+
+            // Ensure all statuses are present
+            $statusCounts = array_merge([
+                'pending' => 0,
+                'processing' => 0,
+                'shipped' => 0,
+                'completed' => 0,
+                'cancelled' => 0,
+                'cancellation_requested' => 0,
+            ], $statusCounts);
+
+            return view('AdminPanel.orders.index', compact('orders', 'statusCounts', 'allOrdersCount'));
         }
 
-        // Apply sorting - moved before pagination
-        switch ($request->sort) {
-            case 'total_asc':
-                $query->orderBy('total', 'asc');
-                break;
-            case 'total_desc':
-                $query->orderBy('total', 'desc');
-                break;
-            case 'date_asc':
-                $query->orderBy('created_at', 'asc');
-                break;
-            case 'date_desc':
-                $query->orderBy('created_at', 'desc');
-                break;
-            default:
-                // Default to latest (newest first)
-                $query->orderBy('created_at', 'desc');
+        /**
+         * Display the specified order
+         */
+        public function show(Order $order)
+        {
+            $order->load(['user', 'items.product', 'payment', 'statusLogs']);
+
+            return view('AdminPanel.orders.show', compact('order'));
         }
 
-        $orders = $query->paginate(15);
+        /**
+         * Update order status (Admin action)
+         */
+        public function updateStatus(Request $request, Order $order)
+        {
+            // Validate based on the new status
+            $rules = [
+                'status' => 'required|in:pending,processing,shipped,completed,cancelled',
+                'notes' => 'nullable|string|max:500'
+            ];
 
-        // Global count (ignores filters)
-        $allOrdersCount = Order::count();
+            // If status is being changed to 'shipped', tracking number is required
+            if ($request->status === 'shipped') {
+                $rules['tracking_number'] = 'required|string|max:100';
+            }
 
-        // Per-status counts
-        $statusCounts = Order::select('status', DB::raw('count(*) as total'))
-            ->groupBy('status')
-            ->pluck('total', 'status')
-            ->map(fn($count) => (int) $count)
-            ->toArray();
+            $validated = $request->validate($rules);
 
-        // Ensure all statuses are present
-        $statusCounts = array_merge([
-            'pending' => 0,
-            'processing' => 0,
-            'shipped' => 0,
-            'completed' => 0,
-            'cancelled' => 0,
-        ], $statusCounts);
-
-        return view('AdminPanel.orders.index', compact('orders', 'statusCounts', 'allOrdersCount'));
-    }
-
-
-    /**
-     * Display the specified order
-     */
-    public function show(Order $order)
-    {
-        $order->load(['user', 'items.product', 'payment']);
-
-        return view('AdminPanel.orders.show', compact('order'));
-    }
-
-    /**
-     * Update order status
-     */
-    public function updateStatus(Request $request, Order $order)
-    {
-        $request->validate([
-            'status' => 'required|in:pending,processing,shipped,completed,cancelled',
-            'notes' => 'nullable|string|max:500'
-        ]);
-
-        $oldStatus = $order->status;
-        $newStatus = $request->status;
-
-        // Handle stock logic
-        if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
-            $this->restoreStock($order);
-        } elseif ($oldStatus === 'cancelled' && $newStatus !== 'cancelled') {
-            $this->deductStock($order);
-        }
-
-        $order->update(['status' => $newStatus]);
-
-            // Log the change
-        OrderStatusLog::create([
-            'order_id' => $order->id,
-            'status'   => $newStatus,
-            'changed_at' => now(),
-        ]);
-
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'status' => $order->status,
-                'oldStatus' => $oldStatus,
-                'orderNumber' => $order->order_number,
-                'new_status_label' => ucfirst($order->status),
-                'status_counts' => [
-                    'pending'   => Order::where('status', 'pending')->count(),
-                    'processing'=> Order::where('status', 'processing')->count(),
-                    'shipped'   => Order::where('status', 'shipped')->count(),
-                    'completed' => Order::where('status', 'completed')->count(),
-                    'cancelled' => Order::where('status', 'cancelled')->count(),
-                ],
-                'message' => "Order status updated to {$newStatus}"
-            ]);
-        }
-
-        return redirect()
-            ->route('orders.show', $order)
-            ->with('success', "Order status updated to {$newStatus}");
-    }
-
-    public function bulkUpdateStatus(Request $request)
-    {
-        $request->validate([
-            'order_ids' => 'required|array',
-            'order_ids.*' => 'exists:orders,id',
-            'status' => 'required|in:pending,processing,shipped,completed,cancelled',
-        ]);
-
-        $orders = Order::whereIn('id', $request->order_ids)->get();
-        $updatedOrders = [];
-
-        foreach ($orders as $order) {
             $oldStatus = $order->status;
             $newStatus = $request->status;
 
-            if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
-                $this->restoreStock($order);
-            } elseif ($oldStatus === 'cancelled' && $newStatus !== 'cancelled') {
-                $this->deductStock($order);
+            // Prevent changing from cancellation_requested directly
+            if ($oldStatus === 'cancellation_requested' && $newStatus !== 'cancelled') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please use Approve or Reject buttons for cancellation requests.'
+                ], 400);
             }
 
-            $order->update(['status' => $newStatus]);
+            // Use DB transaction for data consistency
+            DB::transaction(function() use ($order, $oldStatus, $newStatus, $validated) {
+                // Handle stock logic
+                if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
+                    $this->restoreStock($order);
+                } elseif ($oldStatus === 'cancelled' && $newStatus !== 'cancelled') {
+                    $this->deductStock($order);
+                }
 
-             // Log each order status change
-            OrderStatusLog::create([
-                'order_id' => $order->id,
-                'status'   => $newStatus,
-                'changed_at' => now(),
-            ]);
+                // Update order data
+                $updateData = ['status' => $newStatus];
+                
+                // Add tracking number if status is shipped
+                if ($newStatus === 'shipped' && isset($validated['tracking_number'])) {
+                    $updateData['tracking_number'] = $validated['tracking_number'];
+                }
 
-            $updatedOrders[] = [
-                'id' => $order->id,
-                'status' => $order->status,
-                'order_number' => $order->order_number,
-                'oldStatus' => $oldStatus
-            ];
-        }
+                $order->update($updateData);
 
-        // Return JSON for AJAX requests, redirect for regular requests
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'updatedCount' => count($updatedOrders),
-                'updatedOrders' => $updatedOrders,
-                'newStatus' => $request->status,
-                'message' => count($request->order_ids) . " orders updated to {$request->status}"
-            ]);
-        }
+                // Log the status change
+                OrderStatusLog::create([
+                    'order_id' => $order->id,
+                    'status'   => $newStatus,
+                    'changed_at' => now(),
+                ]);
+            });
 
-        return redirect()
-            ->route('orders.index')
-            ->with('success', count($request->order_ids) . " orders updated to {$request->status}");
-    }
+            // Get updated status counts using single query
+            $statusCounts = $this->getStatusCountsArray();
 
-public function getStatusCounts()
-{
-    $statusCounts = Order::select('status', DB::raw('count(*) as total'))
-        ->groupBy('status')
-        ->pluck('total', 'status')
-        ->toArray();
-
-    // Ensure all statuses are always present
-    $statusCounts = array_merge([
-        'pending' => 0,
-        'processing' => 0,
-        'shipped' => 0,
-        'completed' => 0,
-        'cancelled' => 0,
-    ], $statusCounts);
-
-    return response()->json(['statusCounts' => $statusCounts]);
-}
-
-
-public function markReceived(Request $request, $orderId)
-{
-    $order = Order::where('id', $orderId)
-                  ->where('user_id', Auth::id()) // Ensure user owns the order
-                  ->where('status', 'shipped') // Only shipped orders can be marked as received
-                  ->firstOrFail();
-
-    $order->update(['status' => 'completed']);
-
-    
-
-    // Optional: record status history
-    /*
-    $order->statusHistory()->create([
-        'status' => 'completed',
-        'notes' => 'Marked as received by customer',
-        'updated_by' => auth()->id(),
-    ]);
-    */
-
-    if ($request->expectsJson() || $request->ajax()) {
-        return response()->json([
-            'success' => true,
-            'status' => $order->status,
-            'orderNumber' => $order->order_number,
-            'message' => 'Order marked as received successfully'
-        ]);
-    }
-    
-
-    return redirect()
-        ->route('user.orders')
-        ->with('success', 'Order marked as received successfully');
-}
-
-/**
- * Cancel order (pending -> cancelled)
- */
-public function cancelOrder(Request $request, $orderId)
-{
-    $order = Order::where('id', $orderId)
-                  ->where('user_id', Auth::id()) // Ensure user owns the order
-                  ->where('status', 'pending') // Only pending orders can be cancelled
-                  ->firstOrFail();
-
-    // Restore stock when cancelling
-    $this->restoreStock($order);
-    
-    $order->update(['status' => 'cancelled']);
-
-    // Optional: record status history
-    /*
-    $order->statusHistory()->create([
-        'status' => 'cancelled',
-        'notes' => 'Cancelled by customer',
-        'updated_by' => auth()->id(),
-    ]);
-    */
-
-    if ($request->expectsJson() || $request->ajax()) {
-        return response()->json([
-            'success' => true,
-            'status' => $order->status,
-            'orderNumber' => $order->order_number,
-            'message' => 'Order cancelled successfully'
-        ]);
-    }
-
-    return redirect()
-        ->route('user.orders')
-        ->with('success', 'Order cancelled successfully');
-}
-    /**
-     * Export orders to CSV
-     */
-    public function export(Request $request)
-    {
-        $query = Order::with(['user', 'items', 'payment']);
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
-
-        $filename = 'orders_' . now()->format('Y-m-d_H-i-s') . '.csv';
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ];
-
-        return response()->stream(function() use ($query) {
-            $file = fopen('php://output', 'w');
-
-            // CSV headers
-            fputcsv($file, [
-                'Order Number', 'Customer', 'Email', 'Phone', 'Status',
-                'Total', 'Payment Method', 'Payment Status', 'Order Date'
-            ]);
-
-            // Use cursor to avoid memory issues
-            foreach ($query->cursor() as $order) {
-                fputcsv($file, [
-                    $order->order_number,
-                    $order->full_name,
-                    $order->user->email ?? $order->guest_email,
-                    $order->phone,
-                    ucfirst($order->status),
-                    '₱' . number_format((float) $order->total, 2),
-                    ucfirst($order->payment->method ?? 'N/A'),
-                    ucfirst($order->payment->status ?? 'N/A'),
-                    $order->created_at->format('Y-m-d H:i:s'),
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'status' => $order->status,
+                    'oldStatus' => $oldStatus,
+                    'orderNumber' => $order->order_number,
+                    'tracking_number' => $order->tracking_number,
+                    'new_status_label' => ucfirst(str_replace('_', ' ', $order->status)),
+                    'status_counts' => $statusCounts,
+                    'message' => "Order status updated to " . str_replace('_', ' ', $newStatus)
                 ]);
             }
 
-            fclose($file);
-        }, 200, $headers);
-    }
+            return redirect()
+                ->route('orders.show', $order)
+                ->with('success', "Order #{$order->order_number} status updated to " . str_replace('_', ' ', $newStatus));
+        }
 
-    /**
-     * Restore stock when order is cancelled
-     */
-    private function restoreStock(Order $order)
-    {
-        foreach ($order->items as $item) {
-            $product = $item->product;
-            if ($product && $item->size) {
-                $stockField = 'stock_' . strtolower($item->size);
-                if ($product->getAttribute($stockField) !== null) {
-                    $product->increment($stockField, $item->quantity);
+        /**
+         * Get status counts (for AJAX)
+         */
+        public function getStatusCounts()
+        {
+            $statusCounts = $this->getStatusCountsArray();
+
+            return response()->json(['statusCounts' => $statusCounts]);
+        }
+
+        /**
+         * Approve cancellation request (Admin approves user's cancellation)
+         */
+        public function approveCancellation(Request $request, $orderId)
+        {
+            $order = Order::where('id', $orderId)
+                        ->where('status', 'cancellation_requested')
+                        ->firstOrFail();
+
+            DB::transaction(function() use ($order) {
+                // Restore stock when cancelling
+                $this->restoreStock($order);
+                
+                $order->update(['status' => 'cancelled']);
+
+                // Log the change
+                OrderStatusLog::create([
+                    'order_id' => $order->id,
+                    'status' => 'cancelled',
+                    'changed_at' => now(),
+                ]);
+            });
+
+            $statusCounts = $this->getStatusCountsArray();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'status' => 'cancelled',
+                    'orderNumber' => $order->order_number,
+                    'message' => 'Cancellation approved and stock restored',
+                    'status_counts' => $statusCounts,
+                ]);
+            }
+
+            return redirect()
+                ->route('orders.show', $order)
+                ->with('success', "Order #{$order->order_number} has been cancelled and stock restored");
+        }
+
+        /**
+         * Reject cancellation request (Admin rejects user's cancellation)
+         */
+        public function rejectCancellation(Request $request, $orderId)
+        {
+            $order = Order::where('id', $orderId)
+                        ->where('status', 'cancellation_requested')
+                        ->firstOrFail();
+
+            DB::transaction(function() use ($order) {
+                // Revert to processing status
+                $order->update(['status' => 'processing']);
+
+                // Log the change
+                OrderStatusLog::create([
+                    'order_id' => $order->id,
+                    'status' => 'processing',
+                    'changed_at' => now(),
+                ]);
+            });
+
+            $statusCounts = $this->getStatusCountsArray();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'status' => 'processing',
+                    'orderNumber' => $order->order_number,
+                    'message' => 'Cancellation request rejected',
+                    'status_counts' => $statusCounts,
+                ]);
+            }
+
+            return redirect()
+                ->route('orders.show', $order)
+                ->with('success', "Cancellation request rejected for order #{$order->order_number}");
+        }
+
+        /**
+         * Export orders to CSV
+         */
+        public function export(Request $request)
+        {
+            $query = Order::with(['user', 'items', 'payment']);
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('date_from')) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+
+            if ($request->filled('date_to')) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+
+            $filename = 'orders_' . now()->format('Y-m-d_H-i-s') . '.csv';
+
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename=\"$filename\"",
+            ];
+
+            return response()->stream(function() use ($query) {
+                $file = fopen('php://output', 'w');
+
+                // CSV headers
+                fputcsv($file, [
+                    'Order Number', 'Customer', 'Email', 'Phone', 'Status',
+                    'Tracking Number', 'Total', 'Payment Method', 'Payment Status', 'Order Date'
+                ]);
+
+                // Use cursor to avoid memory issues
+                foreach ($query->cursor() as $order) {
+                    fputcsv($file, [
+                        $order->order_number,
+                        $order->full_name,
+                        $order->user->email ?? $order->guest_email,
+                        $order->phone,
+                        ucfirst(str_replace('_', ' ', $order->status)),
+                        $order->tracking_number ?? 'N/A',
+                        '₱' . number_format((float) $order->total, 2),
+                        ucfirst($order->payment->method ?? 'N/A'),
+                        ucfirst($order->payment->status ?? 'N/A'),
+                        $order->created_at->format('Y-m-d H:i:s'),
+                    ]);
+                }
+
+                fclose($file);
+            }, 200, $headers);
+        }
+
+        /**
+         * Helper: Get status counts as array
+         */
+        private function getStatusCountsArray()
+        {
+            $statusCounts = Order::select('status', DB::raw('count(*) as total'))
+                ->groupBy('status')
+                ->pluck('total', 'status')
+                ->toArray();
+
+            // Ensure all statuses are always present
+            return array_merge([
+                'pending' => 0,
+                'processing' => 0,
+                'shipped' => 0,
+                'completed' => 0,
+                'cancelled' => 0,
+                'cancellation_requested' => 0,
+            ], $statusCounts);
+        }
+
+        /**
+         * Restore stock when order is cancelled
+         */
+        private function restoreStock(Order $order)
+        {
+            foreach ($order->items as $item) {
+                // Access the product relationship directly (already loaded or will query)
+                $product = $item->product;
+                
+                // If product is null (deleted), try to find it including trashed
+                if (!$product && $item->product_id) {
+                    $product = \App\Models\Product::withTrashed()->find($item->product_id);
+                }
+                
+                if ($product && $item->size) {
+                    $size = strtolower($item->size);
+                    $stockField = 'stock_' . $size;
+                    
+                    // Validate size field exists
+                    if (in_array($size, ['s', 'm', 'l', 'xl', 'xxl']) && 
+                        $product->getAttribute($stockField) !== null) {
+                        $product->increment($stockField, $item->quantity);
+                        
+                        Log::info("Stock restored for product {$product->id}: +{$item->quantity} to {$stockField}");
+                    } else {
+                        Log::warning("Invalid size or stock field for product {$product->id}: {$stockField}");
+                    }
+                }
+            }
+        }
+
+        /**
+         * Deduct stock when cancelled order is restored
+         */
+        private function deductStock(Order $order)
+        {
+            foreach ($order->items as $item) {
+                // Access the product relationship directly (already loaded or will query)
+                $product = $item->product;
+                
+                // If product is null (deleted), try to find it including trashed
+                if (!$product && $item->product_id) {
+                    $product = \App\Models\Product::withTrashed()->find($item->product_id);
+                }
+                
+                if ($product && $item->size) {
+                    $size = strtolower($item->size);
+                    $stockField = 'stock_' . $size;
+                    $currentStock = $product->getAttribute($stockField);
+
+                    // Validate size field exists
+                    if (in_array($size, ['s', 'm', 'l', 'xl', 'xxl']) && 
+                        $currentStock !== null) {
+                        
+                        if ($currentStock >= $item->quantity) {
+                            $product->decrement($stockField, $item->quantity);
+                            
+                            Log::info("Stock deducted for product {$product->id}: -{$item->quantity} from {$stockField}");
+                        } else {
+                            Log::warning("Insufficient stock for product {$product->id} (field: {$stockField}). Required: {$item->quantity}, Available: {$currentStock}");
+                        }
+                    } else {
+                        Log::warning("Invalid size or stock field for product {$product->id}: {$stockField}");
+                    }
                 }
             }
         }
     }
-
-    /**
-     * Deduct stock when cancelled order is restored
-     */
-    private function deductStock(Order $order)
-    {
-        foreach ($order->items as $item) {
-            $product = $item->product;
-            if ($product && $item->size) {
-                $stockField = 'stock_' . strtolower($item->size);
-                $currentStock = $product->getAttribute($stockField);
-
-                if ($currentStock !== null && $currentStock >= $item->quantity) {
-                    $product->decrement($stockField, $item->quantity);
-                } else {
-                    // Optional: log warning if stock is insufficient
-                    Log::warning("Stock deduction failed for product {$product->id} (field: {$stockField})");
-                }
-            }
-        }
-    }
-}

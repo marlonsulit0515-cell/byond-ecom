@@ -1,17 +1,8 @@
-        body {
-          font-family: Century Gothic, sans-serif !important;
-        }
-        .bg-primary { background-color: #1F0C35; }
-        .bg-primary-hover:hover { background-color: #9e895c; }
-        .border-primary { border-color: #1F0C35; }
-        .text-primary { color: #1F0C35; }
-        
-        /* Status badge colors */
-        .status-pending { background-color: #fed7aa; color: #9a3412; }
-        .status-processing { background-color: #bfdbfe; color: #1e40af; }
-        .status-shipped { background-color: #ddd6fe; color: #6b21a8; }
-        .status-completed { background-color: #bbf7d0; color: #14532d; }
-        .status-cancelled { background-color: #fecaca; color: #991b1b; }
+
+        .bg-primary { background-color: #f4eedf; }
+        .bg-primary-hover:hover { background-color: #762c21; }
+        .border-primary { border-color: #020202; }
+        .text-primary { color: #ffffff; }
         
         /* Dropdown positioning */
         .action-dropdown { position: relative; }
@@ -23,3 +14,66 @@
             z-index: 50;
         }
         .dropdown-menu.show { display: block; }
+         /* Compact table styling */
+        .compact-table td,
+        .compact-table th {
+            padding: 0.75rem 1rem !important;
+        }
+        .compact-table {
+            font-size: 0.875rem;
+        }
+        
+        /* Pagination styling */
+        .pagination-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .page-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .page-input {
+            width: 60px;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+        
+        .pagination-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #374151;
+        }
+        
+        .pagination-btn:hover:not(.disabled) {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .pagination-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        .pagination-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }

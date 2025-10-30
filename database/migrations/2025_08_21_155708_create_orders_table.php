@@ -31,8 +31,10 @@ return new class extends Migration
 
             // Shipping
             $table->string('delivery_option')->default('ship'); // ship | pickup
+            $table->string('tracking_number')->nullable()->after('status');
             $table->boolean('same_as_billing')->default(true);
             $table->string('shipping_address')->nullable();
+            $table->decimal('shipping_fee', 10, 2)->default(0)->after('total');
 
             $table->timestamps();
         });

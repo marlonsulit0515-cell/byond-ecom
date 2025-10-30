@@ -1,6 +1,8 @@
 <?php
 
+
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\ShippingRateController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
@@ -175,9 +177,18 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
     Route::post('/update_confirmation/{id}', [AdminController::class, 'update_confirmation'])->name('admin.update-changes');
     Route::get('/delete_product/{id}', [AdminController::class, 'delete_product'])->name('admin.delete-product');
 
-    Route::get('/shipping-settings', [AdminController::class, 'shipping_settings'])->name('admin.shipping-settings');
-    Route::get('user-info', [AdminController::class, 'user_info'])->name('admin.user-management');
+    Route::get('/shipping-settings', [ShippingRateController::class, 'shipping_settings'])->name('admin.shipping-settings');
+    Route::patch('/shipping-settings/update/{id}', [ShippingRateController::class, 'updateShipPrice'])->name('admin.shipping.update');
+    Route::delete('/shipping-settings/delete/{id}', [ShippingRateController::class, 'deleteShipPrice'])->name('admin.shipping.delete');
+
+    Route::post('/shipping-settings/fixed-rates/add', [ShippingRateController::class, 'addFixedRate'])->name('admin.shipping.fixed.add');
+    Route::patch('/shipping-settings/fixed-rates/update/{id}', [ShippingRateController::class, 'updateFixedRate'])->name('admin.shipping.fixed.update');
+    Route::delete('/shipping-settings/fixed-rates/delete/{id}', [ShippingRateController::class, 'deleteFixedRate'])->name('admin.shipping.fixed.delete');
+
+    Route::get('/registered-users', [AdminController::class, 'registered_users'])->name('admin.user-management');
     Route::get('/inbox', [AdminController::class, 'inbox'])->name('admin.inbox');
+
+
 });
 
 /*
@@ -195,8 +206,11 @@ Route::middleware(['auth', \App\Http\Middleware\UserMiddleware::class])->group(f
         ->middleware('throttle:30,1') // limit to 30 requests per minute
         ->name('checkout_page');
 
-    Route::get('/shop/confirmation/{orderNumber}', [ShopController::class, 'confirmation'])
-        ->name('shop.confirmation');
+    Route::get('/order-confirmation/{orderId}', [ShopController::class, 'order_confirmation'])
+        ->name('order-confirmation');
+
+    Route::post('/user/orders/{id}/request-cancellation', [UserController::class, 'requestCancellation']);
+    Route::post('/user/orders/{id}/confirm-delivery', [UserController::class, 'confirmDelivery']);
 });
 
 /*
@@ -224,8 +238,12 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
-    Route::post('/orders/bulk-update', [OrderController::class, 'bulkUpdateStatus'])->name('orders.bulk-update');
+    Route::get('/admin/orders/status-counts', [OrderController::class, 'getStatusCounts'])->name('orders.status-counts');
     Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
+    
+    Route::post('/orders/{id}/approve-cancellation', [OrderController::class, 'approveCancellation'])->name('orders.approve-cancellation');
+    
+    Route::post('/orders/{id}/reject-cancellation', [OrderController::class, 'rejectCancellation'])->name('orders.reject-cancellation');
 });
 
 /*
@@ -236,14 +254,24 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
 */
 
 Route::post('/checkout/process', [CheckoutController::class, 'checkout'])->name('checkout.process');
+ Route::post('/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('calculate.shipping');
 
 // PayPal routes
-Route::get('/paypal/success', [CheckoutController::class, 'paypalSuccess'])->name('paypal.success');
-Route::get('/paypal/cancel', [CheckoutController::class, 'paypalCancel'])->name('paypal.cancel');
-
+Route::prefix('paypal')->group(function () {
+    Route::get('/success', [CheckoutController::class, 'paypalSuccess'])
+        ->name('paypal.success');
+    
+    Route::get('/cancel', [CheckoutController::class, 'paypalCancel'])
+        ->name('paypal.cancel');
+});
 // Paymongo Routes
-Route::get('/paymongo/success', [CheckoutController::class, 'paymongoSuccess'])->name('paymongo.success');
-Route::get('/paymongo/cancel', [CheckoutController::class, 'paymongoCancel'])->name('paymongo.cancel');
+Route::prefix('paymongo')->group(function () {
+    Route::get('/success', [CheckoutController::class, 'paymongoSuccess'])
+        ->name('paymongo.success');
+    
+    Route::get('/cancel', [CheckoutController::class, 'paymongoCancel'])
+        ->name('paymongo.cancel');
+});
 
 /*
 |--------------------------------------------------------------------------

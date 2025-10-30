@@ -37,8 +37,8 @@
 
         <!-- Sidebar -->
         <aside id="sidebar"
-            class="fixed top-16 left-0 w-64 md:w-72 h-screen bg-gray-50 border-r border-gray-200 overflow-y-auto transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-40">
-            <div class="p-6">
+            class="fixed top-16 left-0 w-64 md:w-72 h-screen bg-[#f4eedf] border-r border-gray-200 overflow-y-auto transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-40">
+        <div class="p-6">
                 @include('layouts.sidenav')
             </div>
         </aside>
@@ -56,7 +56,7 @@
             </div>
         </main>
     </div>
-
+<script src=""></script>
     <script>
         // Sidebar toggle for mobile
         const sidebar = document.getElementById('sidebar');

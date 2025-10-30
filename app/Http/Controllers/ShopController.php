@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ShopController extends Controller
 {
@@ -30,7 +31,12 @@ class ShopController extends Controller
             return redirect()->route('view-cart')->with('error', 'Your cart is empty!');
         }
 
-        return view('shop.checkout', compact('cart'));
+        $provinces = DB::table('shipping_rates')
+            ->where('is_active', true)
+            ->orderBy('province')
+            ->get(['province', 'price']);
+
+        return view('shop.checkout', compact('cart', 'provinces'));
     }
 
     /**

@@ -19,10 +19,10 @@ return [
     'redirect' => env('GOOGLE_REDIRECT_URL'),
     ],
 
-    'facebook' => [
-    'client_id' => env('FACEBOOK_CLIENT_ID'),
-    'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
-    'redirect' => env('FACEBOOK_REDIRECT_URI'),
+    'paymongo' => [
+    'secret_key' => env('PAYMONGO_SECRET_KEY'),
+    'public_key' => env('PAYMONGO_PUBLIC_KEY'),
+    'webhook_secret' => env('PAYMONGO_WEBHOOK_SECRET'),
     ],
 
     
