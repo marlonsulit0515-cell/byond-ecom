@@ -1,0 +1,50 @@
+
+/* Override default sidebar link colors */
+#sidebar nav ul li a {
+    color: #020202 !important;
+    background-color: transparent !important;
+    font-family: 'Labor Union', sans-serif;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+/* Hover state - keep subtle gray */
+#sidebar nav ul li a:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    color: #020202 !important;
+}
+
+/* Active/Selected state - use primary color background with white text */
+#sidebar nav ul li a.bg-black {
+    background-color: var(--color-primary) !important;
+    color: #f4eedf !important;
+    font-weight: 600;
+}
+
+/* Active state hover - maintain primary color */
+#sidebar nav ul li a.bg-black:hover {
+    background-color: var(--color-primary) !important;
+    color: #f4eedf !important;
+    opacity: 0.95;
+}
+
+/* SVG icon colors for default state */
+#sidebar nav ul li a svg {
+    color: #020202;
+}
+
+/* SVG icon colors for active state */
+#sidebar nav ul li a.bg-black svg {
+    color: #f4eedf !important;
+}
+
+/* Ensure text color is correct for active state */
+#sidebar nav ul li a.bg-black span {
+    color: #f4eedf !important;
+}
+
+/* Focus state for accessibility */
+#sidebar nav ul li a:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}

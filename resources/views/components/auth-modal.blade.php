@@ -1,4 +1,3 @@
-<link rel="stylesheet" href="{{ asset('css/auth-modal.css') }}" />
 <div class="modal-overlay" id="authModal" style="display: none;">
     <div class="modal">
         <div class="modal-header">
@@ -17,10 +16,10 @@
             </p>
             
             <div class="modal-actions">
-                <a href="{{ route('login') }}" class="btn btn-primary">
+                <a href="{{ route('login') }}" class="btn-primary-color btn-md">
                      Login
                 </a>
-                <a href="{{ route('register') }}" class="btn btn-secondary">
+                <a href="{{ route('register') }}" class="btn-secondary-color btn-md">
                      Sign Up
                 </a>
             </div>

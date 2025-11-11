@@ -4,45 +4,102 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class ShippingRatesSeeder extends Seeder
-{
-    public function run(): void
-    {
-        $provinces = [
-            'Abra', 'Agusan del Norte', 'Agusan del Sur', 'Aklan', 'Albay', 'Antique', 'Apayao', 'Aurora',
-            'Basilan', 'Bataan', 'Batanes', 'Batangas', 'Benguet', 'Biliran', 'Bohol', 'Bukidnon',
-            'Bulacan', 'Cagayan', 'Camarines Norte', 'Camarines Sur', 'Camiguin', 'Capiz', 'Catanduanes',
-            'Cavite', 'Cebu', 'Cotabato', 'Davao de Oro', 'Davao del Norte', 'Davao del Sur',
-            'Davao Occidental', 'Davao Oriental', 'Dinagat Islands', 'Eastern Samar', 'Guimaras',
-            'Ifugao', 'Ilocos Norte', 'Ilocos Sur', 'Iloilo', 'Isabela', 'Kalinga', 'La Union',
-            'Laguna', 'Lanao del Norte', 'Lanao del Sur', 'Leyte', 'Maguindanao del Norte', 
-            'Maguindanao del Sur', 'Marinduque', 'Masbate', 'Misamis Occidental', 'Misamis Oriental',
-            'Mountain Province', 'Negros Occidental', 'Negros Oriental', 'Northern Samar', 'Nueva Ecija',
-            'Nueva Vizcaya', 'Occidental Mindoro', 'Oriental Mindoro', 'Palawan', 'Pampanga', 'Pangasinan',
-            'Quezon', 'Quirino', 'Rizal', 'Romblon', 'Samar', 'Sarangani', 'Siquijor', 'Sorsogon',
-            'South Cotabato', 'Southern Leyte', 'Sultan Kudarat', 'Sulu', 'Surigao del Norte',
-            'Surigao del Sur', 'Tarlac', 'Tawi-Tawi', 'Zambales', 'Zamboanga del Norte',
-            'Zamboanga del Sur', 'Zamboanga Sibugay'
+{   
+    
+    public function run()
+    {   
+        DB::table('shipping_rates')->truncate();
+        $philippineProvinces = [
+            ['province' => 'Metro Manila (NCR)', 'price' => 80.00],
+            ['province' => 'Rizal', 'price' => 100.00],
+            ['province' => 'Cavite', 'price' => 100.00],
+            ['province' => 'Laguna', 'price' => 100.00],
+            ['province' => 'Batangas', 'price' => 100.00],
+            ['province' => 'Bulacan', 'price' => 100.00],
+            ['province' => 'Pampanga', 'price' => 100.00],
+            ['province' => 'Bataan', 'price' => 100.00],
+            ['province' => 'Tarlac', 'price' => 100.00],
+            ['province' => 'Nueva Ecija', 'price' => 100.00],
+            ['province' => 'Quezon', 'price' => 100.00],
+            ['province' => 'Ilocos Norte', 'price' => 120.00],
+            ['province' => 'Ilocos Sur', 'price' => 120.00],
+            ['province' => 'La Union', 'price' => 120.00],
+            ['province' => 'Pangasinan', 'price' => 120.00],
+            ['province' => 'Cagayan', 'price' => 120.00],
+            ['province' => 'Isabela', 'price' => 120.00],
+            ['province' => 'Nueva Vizcaya', 'price' => 120.00],
+            ['province' => 'Quirino', 'price' => 120.00],
+            ['province' => 'Abra', 'price' => 120.00],
+            ['province' => 'Benguet', 'price' => 120.00],
+            ['province' => 'Ifugao', 'price' => 120.00],
+            ['province' => 'Kalinga', 'price' => 120.00],
+            ['province' => 'Mountain Province', 'price' => 120.00],
+            ['province' => 'Albay', 'price' => 120.00],
+            ['province' => 'Camarines Norte', 'price' => 120.00],
+            ['province' => 'Camarines Sur', 'price' => 120.00],
+            ['province' => 'Sorsogon', 'price' => 120.00],
+            ['province' => 'Masbate', 'price' => 120.00],
+            ['province' => 'Aurora', 'price' => 120.00],
+            ['province' => 'Marinduque', 'price' => 120.00],
+            ['province' => 'Oriental Mindoro', 'price' => 120.00],
+            ['province' => 'Occidental Mindoro', 'price' => 120.00],
+            ['province' => 'Cebu', 'price' => 140.00],
+            ['province' => 'Iloilo', 'price' => 140.00],
+            ['province' => 'Negros Occidental', 'price' => 140.00],
+            ['province' => 'Bohol', 'price' => 140.00],
+            ['province' => 'Leyte', 'price' => 140.00],
+            ['province' => 'Samar', 'price' => 140.00],
+            ['province' => 'Eastern Samar', 'price' => 140.00],
+            ['province' => 'Northern Samar', 'price' => 140.00],
+            ['province' => 'Southern Leyte', 'price' => 140.00],
+            ['province' => 'Aklan', 'price' => 140.00],
+            ['province' => 'Antique', 'price' => 140.00],
+            ['province' => 'Capiz', 'price' => 140.00],
+            ['province' => 'Guimaras', 'price' => 140.00],
+            ['province' => 'Negros Oriental', 'price' => 140.00],
+            ['province' => 'Siquijor', 'price' => 140.00],
+            ['province' => 'Biliran', 'price' => 140.00],
+            ['province' => 'Davao del Sur', 'price' => 160.00],
+            ['province' => 'Davao del Norte', 'price' => 160.00],
+            ['province' => 'Misamis Oriental', 'price' => 160.00],
+            ['province' => 'Misamis Occidental', 'price' => 160.00],
+            ['province' => 'Zamboanga del Sur', 'price' => 160.00],
+            ['province' => 'Cagayan de Oro (Misamis Oriental)', 'price' => 160.00],
+            ['province' => 'General Santos (South Cotabato)', 'price' => 160.00],
+            ['province' => 'Agusan del Norte', 'price' => 160.00],
+            ['province' => 'Agusan del Sur', 'price' => 160.00],
+            ['province' => 'Bukidnon', 'price' => 160.00],
+            ['province' => 'Cotabato', 'price' => 160.00],
+            ['province' => 'Lanao del Norte', 'price' => 160.00],
+            ['province' => 'Sultan Kudarat', 'price' => 160.00],
+            ['province' => 'Surigao del Norte', 'price' => 160.00],
+            ['province' => 'Surigao del Sur', 'price' => 160.00],
+            ['province' => 'Zamboanga del Norte', 'price' => 160.00],
+            ['province' => 'Zamboanga Sibugay', 'price' => 160.00],
+            ['province' => 'Palawan', 'price' => 180.00],
+            ['province' => 'Batanes', 'price' => 180.00],
+            ['province' => 'Sulu', 'price' => 180.00],
+            ['province' => 'Tawi-Tawi', 'price' => 180.00],
+            ['province' => 'Catanduanes', 'price' => 180.00],
+            ['province' => 'Dinagat Islands', 'price' => 180.00],
+            ['province' => 'Basilan', 'price' => 180.00],
+            ['province' => 'Lanao del Sur', 'price' => 180.00],
+            ['province' => 'Maguindanao', 'price' => 180.00],
         ];
 
-        // Sample price logic: vary slightly by region grouping
+        $now = Carbon::now();
         $rates = [];
-        foreach ($provinces as $province) {
-            $price = match (true) {
-                in_array($province, ['Metro Manila', 'Cavite', 'Laguna', 'Bulacan', 'Rizal']) => 100.00,
-                str_contains(strtolower($province), 'mindoro') => 140.00,
-                str_contains(strtolower($province), 'mindanao') => 200.00,
-                str_contains(strtolower($province), 'cebu') => 160.00,
-                default => fake()->randomFloat(2, 120, 200),
-            };
 
+        foreach ($philippineProvinces as $provinceData) {
             $rates[] = [
-                'province' => $province,
-                'price' => $price,
+                'province' => $provinceData['province'],
+                'price' => $provinceData['price'],
                 'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
         }
 

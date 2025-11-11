@@ -3,16 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="https://fonts.cdnfonts.com/css/labor-union" rel="stylesheet">
-    <link href="{{ asset('css/font-style.css') }}" rel="stylesheet" />
-    <link href="{{ asset('css/screen-behavior.css') }}" rel="stylesheet" />
-    
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
     <link rel="icon" type="image/png" href="{{ asset('img/logo/ByondLogo-Brown.png') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://use.typekit.net/oov2wcw.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/labor-union" rel="stylesheet">
     <link rel="stylesheet" href="https://use.typekit.net/oov2wcw.css">
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <link href="{{ asset('css/checkout.css') }}" rel="stylesheet" />
+    <link href="{{ asset('css/universal-style.css') }}" rel="stylesheet" />
+
     <title>Checkout Page</title>
 </head>
 <body>
@@ -113,11 +118,12 @@
                                     </li>
                                 </ul>
 
-                                <div class="mt-8 space-y-3">
-                                    <button type="submit" form="checkout-form" class="rounded-md px-4 py-2.5 w-full text-sm font-medium tracking-wide bg-blue-600 hover:bg-blue-700 text-white transition cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed" id="submit-btn">
+                                <div class="mt-8 flex flex-col gap-4">
+                                    <button type="submit" form="checkout-form" class="btn-primary-color btn-md w-full" id="submit-btn">
                                         Complete Purchase
                                     </button>
-                                    <a href="{{ route('view-cart') }}" class="block text-center rounded-md px-4 py-2.5 w-full text-sm font-medium tracking-wide bg-white border-2 border-gray-300 hover:border-gray-400 transition cursor-pointer" style="color: #020202;">
+
+                                    <a href="{{ route('view-cart') }}" class="btn-secondary-color btn-md w-full text-center">
                                         ← Back to Cart
                                     </a>
                                 </div>
@@ -144,7 +150,7 @@
                                     value="{{ old('full_name', Auth::user()->name ?? '') }}" 
                                     required
                                     placeholder="Enter your full name"
-                                    maxlength="255"
+                                    maxlength="40"
                                     class="px-4 py-2.5 bg-white border border-gray-400 text-slate-900 w-full text-sm rounded-md focus:outline-blue-600 focus:border-blue-600" />
                                 @error('full_name')
                                     <span class="text-red-600 text-xs mt-1 block">{{ $message }}</span>
@@ -154,16 +160,13 @@
                             <!-- Phone Number -->
                             <div>
                                 <label class="text-sm text-slate-900 font-medium block mb-2">Phone Number</label>
-                                <input type="text" 
+
+                                <input type="text"
                                     id="phone"
-                                    name="phone" 
-                                    value="{{ old('phone') }}" 
+                                    name="phone"
+                                    value="{{ old('phone') }}"
                                     required
-                                    placeholder="+63 XXX XXX XXXX"
-                                    maxlength="20"
-                                    pattern="^\+63\s\d{3}\s\d{3}\s\d{4}$"
                                     class="px-4 py-2.5 bg-white border border-gray-400 text-slate-900 w-full text-sm rounded-md focus:outline-blue-600 focus:border-blue-600" />
-                                <p class="text-xs text-slate-500 mt-1">Format: +63 XXX XXX XXXX</p>
                                 @error('phone')
                                     <span class="text-red-600 text-xs mt-1 block">{{ $message }}</span>
                                 @enderror

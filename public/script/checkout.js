@@ -153,17 +153,6 @@
                     provinceSelect.focus();
                     return false;
                 }
-
-                // Validate phone number format
-                const phoneInput = document.getElementById('phone');
-                const phoneRegex = /^\+63\s\d{3}\s\d{3}\s\d{4}$/;
-                if (phoneInput && !phoneRegex.test(phoneInput.value)) {
-                    e.preventDefault();
-                    alert('Please enter a valid Philippine phone number (+63 XXX XXX XXXX)');
-                    phoneInput.focus();
-                    return false;
-                }
-
                 submitButton.disabled = true;
                 submitButton.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Processing...';
                 
@@ -174,64 +163,6 @@
                 }, 15000);
             });
         }
-
-        // Phone number formatting (Philippine format) - Matches controller validation
-        const phoneInput = document.getElementById('phone');
-        if (phoneInput) {
-            phoneInput.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/\D/g, '');
-                
-                // Handle Philippine phone format
-                if (value.length > 0 && !value.startsWith('63')) {
-                    if (value.startsWith('0')) {
-                        value = '63' + value.substring(1);
-                    } else if (value.startsWith('9')) {
-                        value = '63' + value;
-                    }
-                }
-                
-                // Limit to 12 digits (63 + 10 digits)
-                if (value.length > 12) {
-                    value = value.substring(0, 12);
-                }
-                
-                // Format: +63 XXX XXX XXXX
-                let formatted = '';
-                if (value.length >= 2) {
-                    formatted = '+' + value.substring(0, 2);
-                    if (value.length > 2) {
-                        formatted += ' ' + value.substring(2, 5);
-                    }
-                    if (value.length > 5) {
-                        formatted += ' ' + value.substring(5, 8);
-                    }
-                    if (value.length > 8) {
-                        formatted += ' ' + value.substring(8, 12);
-                    }
-                } else if (value.length > 0) {
-                    formatted = '+' + value;
-                }
-                
-                e.target.value = formatted;
-            });
-
-            // Validate on blur
-            phoneInput.addEventListener('blur', function() {
-                const phoneRegex = /^\+63\s\d{3}\s\d{3}\s\d{4}$/;
-                if (this.value && !phoneRegex.test(this.value)) {
-                    this.setCustomValidity('Please enter a valid Philippine phone number (+63 XXX XXX XXXX)');
-                    this.reportValidity();
-                } else {
-                    this.setCustomValidity('');
-                }
-            });
-
-            // Clear custom validity on input
-            phoneInput.addEventListener('input', function() {
-                this.setCustomValidity('');
-            });
-        }
-
         // Initialize shipping calculation if province and delivery are pre-selected (from old() input)
         if (provinceSelect && deliveryOption) {
             if (provinceSelect.value && deliveryOption.value) {

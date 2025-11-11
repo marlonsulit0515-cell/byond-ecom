@@ -1,76 +1,65 @@
 <?php
 
 namespace App\Http\Controllers;
-use \App\Models\Product;
+
+use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
-    {   
+{
+    // Home page
     public function homepage_products()
-    {   
-        // Latest added products
-        $recentProducts = Product::latest()->take(15)->get();
-
-        // Latest Sale Products
-        $salesProducts = Product::whereNotNull('discount_price')
-            ->where('discount_price', '>', 0)
-            ->orderBy('updated_at', 'desc')
-            ->take(15)
-            ->get();
-
-        // 10 products under "Tees" category
-        $teesProducts = Product::where('category', 'Tees')
-            ->latest()
-            ->take(15)
-            ->get();
-
-        // Return to the home view
-        return view('home', compact('recentProducts', 'salesProducts', 'teesProducts'));
-    }
-    //Filter for the shop page
-      private function applyFilters($query)
     {
-        // Sorting
-        switch(request('sort')) {
-            case 'name_asc':
-                $query->orderBy('name', 'asc');
-                break;
-            case 'name_desc':
-                $query->orderBy('name', 'desc');
-                break;
-            case 'price_asc':
-                $query->orderByRaw("COALESCE(discount_price, price) ASC");
-                break;
-            case 'price_desc':
-                $query->orderByRaw("COALESCE(discount_price, price) DESC");
-                break;
-            case 'latest':
-            default:
-                $query->latest();
-                break;
+        $categories = Category::all(); // <-- needed for header
+        $recentProducts = Product::latest()->take(15)->get();
+        $salesProducts = Product::whereNotNull('discount_price')
+                                ->where('discount_price', '>', 0)
+                                ->latest()
+                                ->take(15)
+                                ->get();
+        $teesProducts = Product::where('category', 'Tees')
+                               ->latest()
+                               ->take(15)
+                               ->get();
+
+        return view('home', compact('recentProducts', 'salesProducts', 'teesProducts', 'categories'));
+    }
+    public function navigation_categories()
+    {
+        $categories = Category::all();
+        return view('layouts.navigation', compact($categories));
+    }
+
+    // Apply filters
+    private function applyFilters($query)
+    {
+        switch (request('sort')) {
+            case 'name_asc': $query->orderBy('name', 'asc'); break;
+            case 'name_desc': $query->orderBy('name', 'desc'); break;
+            case 'price_asc': $query->orderByRaw("COALESCE(discount_price, price) ASC"); break;
+            case 'price_desc': $query->orderByRaw("COALESCE(discount_price, price) DESC"); break;
+            default: $query->latest(); break;
         }
 
-        // Price filter
-        if (request('price_from') && request('price_to') && is_numeric(request('price_from')) && is_numeric(request('price_to'))) {
-            $query->whereBetween(DB::raw("COALESCE(discount_price, price)"), [request('price_from'), request('price_to')]);
-        } elseif (request('price_from') && is_numeric(request('price_from'))) {
+        if (request('price_from') && is_numeric(request('price_from'))) {
             $query->whereRaw("COALESCE(discount_price, price) >= ?", [request('price_from')]);
-        } elseif (request('price_to') && is_numeric(request('price_to'))) {
+        }
+        if (request('price_to') && is_numeric(request('price_to'))) {
             $query->whereRaw("COALESCE(discount_price, price) <= ?", [request('price_to')]);
         }
 
-        // Availability filter
         if (request('availability')) {
-            if (request('availability') == 'in_stock') {
-                $query->where(function($q) {
+            if (request('availability') === 'in_stock') {
+                $query->where(function($q){
                     $q->where('stock_s', '>', 0)
                       ->orWhere('stock_m', '>', 0)
                       ->orWhere('stock_l', '>', 0)
                       ->orWhere('stock_xl', '>', 0)
                       ->orWhere('stock_2xl', '>', 0);
                 });
-            } elseif (request('availability') == 'out_of_stock') {
+            } elseif (request('availability') === 'out_of_stock') {
                 $query->whereRaw("
                     COALESCE(stock_s, 0) <= 0 AND
                     COALESCE(stock_m, 0) <= 0 AND
@@ -81,7 +70,6 @@ class HomeController extends Controller
             }
         }
 
-        // Size filter
         if (request('size')) {
             $sizeColumn = 'stock_' . request('size');
             $query->where($sizeColumn, '>', 0);
@@ -90,68 +78,39 @@ class HomeController extends Controller
         return $query;
     }
 
-    /** Display all products with filters*/
-    public function shop_menu() 
+    // All products
+    public function shop_menu()
     {
-        $query = Product::query();
-        
-        // Apply filters and sorting
-        $query = $this->applyFilters($query);
-        
-        // Pagination with persistent filters
+        $categories = Category::all();
+        $query = $this->applyFilters(Product::query());
         $product = $query->paginate(15)->appends(request()->query());
 
-        // Handle AJAX requests for "Load More"
         if (request()->ajax()) {
             return response()->json([
-                'html' => view('shop.shop-page', ['product' => $product])->render(),
+                'html' => view('shop.shop-page', compact('product', 'categories'))->render(),
                 'hasMore' => $product->hasMorePages(),
                 'nextPage' => $product->currentPage() + 1
             ]);
         }
 
-        // Regular page load
-        return view("shop.shop-page", compact('product'));
+        return view('shop.shop-page', compact('product', 'categories'));
     }
 
-    /**Display products by category with filters */
+    // Products by category
     public function category_dropdown($category)
     {
-        $query = Product::where('category', $category);
-        
-        // Apply filters and sorting
-        $query = $this->applyFilters($query);
-        
-        // Pagination with persistent filters
+        $categories = Category::all();
+        $query = $this->applyFilters(Product::where('category', $category));
         $product = $query->paginate(15)->appends(request()->query());
 
-        // Handle AJAX requests for "Load More"
         if (request()->ajax()) {
             return response()->json([
-                'html' => view('shop.shop-page', ['product' => $product, 'category' => $category])->render(),
+                'html' => view('shop.shop-page', compact('product', 'category', 'categories'))->render(),
                 'hasMore' => $product->hasMorePages(),
                 'nextPage' => $product->currentPage() + 1
             ]);
         }
 
-        return view('shop.shop-page', compact('product', 'category'));
-    }
-
-
-    public function blog_content_one()
-    {
-        return view("blogs.content1");
-    }
-    public function blog_content_two()
-    {
-        return view("blogs.content2");
-    }
-    public function blog_content_three()
-    {
-        return view("blogs.content3");
-    }
-    public function blog_content_four()
-    {
-        return view("blogs.content4");
+        return view('shop.shop-page', compact('product', 'category', 'categories'));
     }
 }

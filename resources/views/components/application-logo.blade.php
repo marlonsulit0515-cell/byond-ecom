@@ -1,3 +1,16 @@
-<svg viewBox="0 0 316 316" xmlns="http://www.w3.org/2000/svg" {{ $attributes }}>
-    <img src="{{ asset('img/logo/ByondLogo-BW.png') }}" alt="">
-</svg>
+<div class="logo-container" {{ $attributes }}>
+    <img src="{{ asset('img/logo/Byond.Co_Primary_Logo_Red Mud.webp') }}" alt="Byond Logo" loading="lazy">
+</div>
+<style>
+.logo-container {
+    max-width: 150px;
+    align-content: center;
+}
+
+.logo-container img {
+    width: 100%;
+    height: auto;
+    display: block; 
+    
+}
+</style>

@@ -23,4 +23,9 @@
             @endforeach
         </tbody>
     </table>
+    @if($users->hasPages())
+        <div class="mt-8 mb-12 flex justify-center">
+            {{ $users->links('vendor.pagination.pagination-custom') }}
+        </div>
+    @endif
 @endsection

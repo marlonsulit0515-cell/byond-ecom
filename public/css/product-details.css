@@ -169,61 +169,14 @@
 }
 
 /* Action Buttons */
-.product-actions {
+.product-page-actions {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin: 25px 0;
+    padding-right: 40%;
 }
 
-.btn-cart, 
-.btn-buy {
-    width: 80%;
-    padding: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border-radius: 8px;
-    font-size: 1rem;
-}
-
-.btn-cart {
-    border: 1px solid #f4eedf;
-    background: #020202;
-    color: white;
-}
-
-.btn-cart:hover:not(:disabled) {
-    background: #f4eedf;
-    color: #762c21;
-}
-
-.btn-buy {
-    background: #020202;
-    color: white;
-    border: none;
-}
-
-.btn-buy:hover:not(:disabled) {
-    background: #f4eedf;
-    color: #762c21;
-}
-
-.btn-cart:disabled, 
-.btn-buy:disabled {
-    background: #CDCDCD;
-    color: #565B7A;
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-/* Product Notes */
-.product-note {
-    font-size: 0.9rem;
-    margin: 20px 0;
-    line-height: 1.5;
-    color: #020202;
-}
 
 /* Accordion */
 details {
@@ -269,6 +222,13 @@ details img {
     .product-image {
         padding: 15px;
         background: white;
+    }
+    .product-page-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 25px 0;
+        padding: 0;
     }
 
     /* Fixed height for mobile too */
@@ -320,11 +280,6 @@ details img {
         font-size: 1.3rem;
     }
 
-    .btn-cart, .btn-buy {
-        width: 100%;
-        padding: 16px 20px;
-    }
-
     details img {
         max-width: 100%;
     }
@@ -367,11 +322,6 @@ details img {
 
     .qty-btn {
         padding: 12px 16px;
-    }
-
-    .btn-cart, .btn-buy {
-        padding: 14px 18px;
-        font-size: 0.95rem;
     }
 
     .thumbnail {

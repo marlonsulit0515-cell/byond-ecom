@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
-use App\Models\Order;
 use App\Models\OrderStatusLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Routing\Controller as BaseController;
 
 class UserController extends BaseController
@@ -19,7 +19,6 @@ class UserController extends BaseController
 
     public function index()
     {
-        // Only select needed columns
         $product = Product::select('id', 'name', 'price', 'discount_price', 'image', 'hover_image')
                         ->limit(20)
                         ->get();
@@ -102,38 +101,15 @@ class UserController extends BaseController
         return view('UserPanel.order-reciept', compact('order'));
     }
 
-    public function getOrderStatus($id)
-    {
+    //controller for cancellation request
+   public function requestCancellation($id, Request $request)
+{
+    try {
         $user = Auth::user();
-        
-        $order = $user->orders()
-            ->with(['payment', 'statusHistory'])
-            ->findOrFail($id);
 
-        return response()->json([
-            'status' => $order->status,
-            'payment_status' => $order->payment->status ?? 'pending',
-            'last_updated' => $order->updated_at->format('M d, Y g:i A'),
-            'status_history' => $order->statusHistory ? $order->statusHistory->map(function($history) {
-                return [
-                    'status' => $history->status,
-                    'created_at' => $history->created_at->format('M d, Y g:i A'),
-                    'note' => $history->note ?? null
-                ];
-            }) : []
-        ]);
-    }
-
-    /**
-     * Request cancellation (User requests to cancel order)
-     * Only allows requesting cancellation for pending or processing orders
-     */
-    public function requestCancellation($id)
-    {
-        $user = Auth::user();
-        
+        // Find the order
         $order = $user->orders()->findOrFail($id);
-        
+
         // Only allow cancellation request if order is pending or processing
         if (!in_array($order->status, ['pending', 'processing'])) {
             return response()->json([
@@ -150,28 +126,95 @@ class UserController extends BaseController
             ], 400);
         }
 
-        DB::transaction(function() use ($order) {
-            $order->update(['status' => 'cancellation_requested']);
-            
-            // Log the status change
-            OrderStatusLog::create([
-                'order_id' => $order->id,
-                'status' => 'cancellation_requested',
-                'changed_at' => now(),
-            ]);
-        });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Cancellation request submitted successfully. Waiting for admin approval.',
-            'orderNumber' => $order->order_number
+        // Validate the request
+        $validated = $request->validate([
+            'reason' => 'required|string|in:changed_mind,found_better_price,ordered_by_mistake,delivery_too_long,want_different_product,payment_issues,duplicate_order,other',
+            'other_reason' => 'required_if:reason,other|nullable|string|min:10|max:500',
+            'comments' => 'nullable|string|max:1000'
         ]);
-    }
 
-    /**
-     * Confirm delivery (User marks order as received)
-     * Only allows confirmation if order is shipped
-     */
+        // Prepare the cancellation reason text
+        $cancellationReasonText = '';
+        
+        if ($validated['reason'] === 'other') {
+            // If "other" is selected, use the custom reason
+            $cancellationReasonText = $validated['other_reason'];
+        } else {
+            // Convert reason code to readable text
+            $reasonMap = [
+                'changed_mind' => 'Changed my mind',
+                'found_better_price' => 'Found a better price elsewhere',
+                'ordered_by_mistake' => 'Ordered by mistake',
+                'delivery_too_long' => 'Delivery time is too long',
+                'want_different_product' => 'Want to order a different product',
+                'payment_issues' => 'Payment issues',
+                'duplicate_order' => 'Duplicate order'
+            ];
+            
+            $cancellationReasonText = $reasonMap[$validated['reason']] ?? ucfirst(str_replace('_', ' ', $validated['reason']));
+        }
+
+        // Start database transaction
+        DB::beginTransaction();
+        
+        try {
+            // Update the order
+            $order->update([
+                'status' => 'cancellation_requested',
+                'cancellation_reason' => $cancellationReasonText,
+                'cancellation_comments' => $validated['comments']
+            ]);
+            
+            // Log the status change (if you have OrderStatusLog model)
+            if (class_exists('App\Models\OrderStatusLog')) {
+                OrderStatusLog::create([
+                    'order_id' => $order->id,
+                    'status' => 'cancellation_requested',
+                    'changed_at' => now(),
+                    'notes' => 'Customer requested cancellation: ' . $cancellationReasonText . 
+                              ($validated['comments'] ? ' | Comments: ' . $validated['comments'] : '')
+                ]);
+            }
+            
+            // Commit transaction
+            DB::commit();
+            
+            // Optional: Send notification email to admin
+            // You can add email notification here if needed
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Cancellation request submitted successfully. Our team will review your request shortly.',
+                'orderNumber' => $order->order_number
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+        
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Please fill in all required fields correctly.',
+            'errors' => $e->errors()
+        ], 422);
+        
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Order not found.'
+        ], 404);
+        
+    } catch (\Exception $e) {
+        Log::error('Cancellation request error: ' . $e->getMessage());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while processing your request. Please try again.'
+        ], 500);
+    }
+}
     public function confirmDelivery($id)
     {
         $user = Auth::user();

@@ -38,7 +38,7 @@ class AuthenticatedSessionController extends Controller
         // Rate limiting - 5 attempts per minute per IP
         $key = 'login:' . $request->ip();
         
-        if (RateLimiter::tooManyAttempts($key, 5)) {
+        if (RateLimiter::tooManyAttempts($key, 50)) {
             $seconds = RateLimiter::availableIn($key);
             throw ValidationException::withMessages([
                 'email' => trans('auth.throttle', [

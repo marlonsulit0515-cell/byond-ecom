@@ -91,8 +91,6 @@ class CheckoutController extends Controller
             'phone' => [
                 'required',
                 'string',
-                'max:20',
-                'regex:/^\+63\s\d{3}\s\d{3}\s\d{4}$/' // Enforce Philippine format
             ],
             'country' => 'required|string',
             'province' => 'required|string|max:255',
@@ -101,7 +99,7 @@ class CheckoutController extends Controller
             'postal_code' => 'required|string|max:10',
             'billing_address' => 'required|string|max:255',
             'delivery_option' => 'required|string|in:ship,pickup',
-            'payment_method' => 'required|string|in:paypal,paymongo',
+            'payment_method' => 'required|string|in:paypal',
             'shipping_address' => 'required_if:same_as_billing,false|nullable|string|max:255',
         ]);
 
@@ -286,17 +284,12 @@ class CheckoutController extends Controller
             // Regenerate session for security
             session()->regenerate();
 
-            // Handle payment methods
-            switch ($request->payment_method) {
-                case 'paypal':
-                    return $this->createPayPalPayment($order, $request);
-
-                case 'paymongo':
-                    return $this->createPaymongoPayment($order, $request);
-
-                default:
-                    return redirect()->back()->with('error', 'Invalid payment method selected.');
+            // Handle payment method (only PayPal now)
+            if ($request->payment_method === 'paypal') {
+                return $this->createPayPalPayment($order, $request);
             }
+
+            return redirect()->back()->with('error', 'Invalid payment method selected.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -743,7 +736,7 @@ class CheckoutController extends Controller
                 $this->clearCheckoutSession();
 
                 return redirect()
-                    ->route('shop.confirmation', $order->order_number)
+                    ->route('paypal.success', $order->order_number)
                     ->with('success', 'Payment successful! Your order has been placed.');
             }
 
@@ -772,90 +765,6 @@ class CheckoutController extends Controller
     public function paypalCancel(Request $request)
     {
         return $this->handleCancelledPayment($request, 'PayPal');
-    }
-
-    /**
-     * Create Paymongo payment and redirect to Paymongo
-     */
-    public function createPaymongoPayment(Order $order, Request $request)
-    {
-        try {
-            session(['paymongo_order_id' => $order->id]);
-
-            Log::info('Paymongo payment initiated', [
-                'user_id' => Auth::id(),
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'ip' => $request->ip()
-            ]);
-
-            // TODO: Implement Paymongo API integration
-            return $this->redirectToCheckoutWithError('Paymongo payment is not yet configured. Please use PayPal or contact support.');
-
-        } catch (\Exception $e) {
-            Log::error('Paymongo payment creation error', [
-                'order_id' => $order->id,
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            
-            return $this->redirectToCheckoutWithError('Paymongo payment failed. Please try again.');
-        }
-    }
-
-    /**
-     * Handle successful Paymongo payment
-     */
-    public function paymongoSuccess(Request $request)
-    {
-        try {
-            $sessionOrderId = session('paymongo_order_id');
-            $orderHash = session('order_hash');
-            
-            if (!$sessionOrderId) {
-                Log::warning('Paymongo callback without session', [
-                    'ip' => $request->ip()
-                ]);
-                abort(403, 'Invalid callback');
-            }
-
-            $orderId = session('order_id');
-            $order = $this->getVerifiedOrder($orderId);
-
-            // Verify order hasn't been tampered with
-            if (!$this->verifyOrderHash($order, $orderHash)) {
-                return $this->redirectToCheckoutWithError('Security verification failed.');
-            }
-
-            // Complete payment processing
-            $transactionId = $request->get('checkout_session_id');
-            $this->completePayment($order, $transactionId, 'Paymongo');
-
-            // Clear session
-            $this->clearCheckoutSession();
-
-            return redirect()
-                ->route('shop.confirmation', $order->order_number)
-                ->with('success', 'Payment successful! Your order has been placed.');
-
-        } catch (\Exception $e) {
-            Log::error('Paymongo success callback error', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            
-            return $this->redirectToCheckoutWithError('Payment verification failed.');
-        }
-    }
-
-    /**
-     * Handle cancelled Paymongo payment
-     */
-    public function paymongoCancel(Request $request)
-    {
-        return $this->handleCancelledPayment($request, 'Paymongo');
     }
 
     /**
@@ -952,7 +861,6 @@ class CheckoutController extends Controller
     {
         session()->forget([
             'paypal_order_id',
-            'paymongo_order_id',
             'order_id',
             'order_hash',
             'cart',

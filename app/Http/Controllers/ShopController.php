@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\Category;
+use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -12,8 +14,9 @@ class ShopController extends Controller
 
     public function item_details($id)
     {   
+        $categories = Category::all();
         $product = Product::find($id);
-        return view('shop.product-details', compact('product'));
+        return view('shop.product-details', compact('product', 'categories'));
     }
 
     /**
@@ -49,7 +52,7 @@ class ShopController extends Controller
             return redirect()->route('login')->with('error', 'You must be logged in to view order confirmations.');
         }
         
-        $order = \App\Models\Order::where('order_number', $orderNumber)
+        $order = Order::where('order_number', $orderNumber)
             ->where('user_id', Auth::id()) // Only allow users to view their own orders
             ->with(['items.product', 'payment']) // Load product relationship
             ->firstOrFail();

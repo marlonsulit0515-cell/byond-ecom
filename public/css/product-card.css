@@ -1,7 +1,0 @@
-.hover-img {
-    transition: opacity 0.5s ease;
-}
-
-.group:hover .hover-img {
-    opacity: 1 !important;
-}

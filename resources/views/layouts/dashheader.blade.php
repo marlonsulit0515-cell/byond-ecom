@@ -1,1 +1,1 @@
-<h2 class="text-xl font-semibold tracking-wide">ADMIN PANEL</h2>
+<h2 class="text-xl font-semibold tracking-wide text-white">ADMIN DASHBOARD</h2>

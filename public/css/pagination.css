@@ -1,0 +1,24 @@
+/* ========================================
+   PAGINATION STYLES
+   ======================================== */
+.pagination-wrapper {
+  margin: 2rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .pagination-wrapper {
+    margin: 1.5rem 0;
+    padding: 0 1rem;
+  }
+  
+  .pagination-wrapper .flex {
+    gap: 1rem !important;
+  }
+  
+  .pagination-wrapper p {
+    font-size: 0.875rem;
+  }
+}

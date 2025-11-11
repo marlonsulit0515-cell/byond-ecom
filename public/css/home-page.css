@@ -1,0 +1,367 @@
+/* Slideshow Section */
+.slideshow {
+  width: 100%;
+  min-height: clamp(600px, 60vh, 700px);  
+  overflow: hidden;
+  position: relative;
+}
+
+.slideshow-container {
+  display: flex;
+  width: 100%;
+  transition: transform 1s ease;
+}
+
+.mySlides {
+  flex: 0 0 100%;
+}
+
+.mySlides img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.block {
+  height: 5em;
+  line-height: 5em;
+  width: 10em;
+  background: #464646;
+  color: #fdfdfd;
+  text-align: center;
+  margin: 1em auto;
+  text-shadow: 0 0 1px #333;
+}
+
+.animatable {
+  visibility: hidden;
+  animation-play-state: paused;
+}
+
+.animated {
+  visibility: visible;
+  animation-fill-mode: both;
+  animation-duration: 3s;
+  animation-play-state: running;
+}
+
+/* fadeInUp */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* bounceInLeft */
+@keyframes bounceInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-2000px);
+  }
+  60% {
+    transform: translateX(20px);
+  }
+  80% {
+    transform: translateX(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animated.fadeInUp {
+  animation-name: fadeInUp;
+}
+
+.animated.bounceInLeft {
+  animation-name: bounceInLeft;
+}
+
+/* Content Container */
+.content-container {
+  margin: 0;
+  padding: 0;
+}
+
+.content-border {
+  background-color: #f4eedf;
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 3vw, 40px);
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.content-border .logo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content-border .logo img {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  display: block;
+}
+
+#secondary img {
+  width: 100%;
+  max-width: 500px;
+  margin: 30px;
+}
+
+.content-border .about {
+  flex: 1;
+  font-size: clamp(14px, 1.8vw, 18px);
+  margin-right: 100px;
+  line-height: 1.8;
+  color: #333;
+  animation: aboutFadeIn 1s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+#bottom {
+  flex: 1;
+  font-size: clamp(14px, 1.8vw, 18px);
+  margin-left: 100px;
+  line-height: 1.8;
+  color: #333;
+  animation: aboutFadeIn 1s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes aboutFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-border .about a {
+  color: #8b4513;
+  text-decoration: underline;
+  transition: opacity 0.3s ease;
+}
+
+.content-border .about a:hover {
+  opacity: 0.7;
+}
+
+/* Image Collage Section - 2x2 Grid */
+.image-collage {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0;
+  min-height: 1200px;
+  margin: 0;
+  padding: 0;
+}
+
+.image-collage span {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-height: 500px;
+}
+
+.image-collage span img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+  z-index: 1;
+}
+
+.image-collage span::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  transition: background 0.6s ease;
+  pointer-events: none;
+}
+
+.image-collage span::after {
+  content: attr(data-text);
+  position: absolute;
+  z-index: 3;
+  font-size: clamp(18px, 3vw, 28px);
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  padding: 0 20px;
+  max-width: 90%;
+}
+
+.image-collage span:hover img {
+  transform: scale(1.15);
+}
+
+.image-collage span:hover::before {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Tablet Landscape */
+@media (max-width: 1024px) {
+  .content-border .logo {
+    min-width: clamp(120px, 20vw, 250px);
+  }
+  
+  .image-collage {
+    min-height: clamp(500px, 80vh, 900px);
+  }
+}
+
+/* Tablet Portrait & Mobile Landscape */
+@media (max-width: 768px) {
+  .slideshow {
+    min-height: clamp(150px, 30vh, 300px);
+  }
+  
+  .mySlides img {
+    height: clamp(150px, 30vh, 300px);
+  }
+  
+  .content-border {
+    flex-direction: column;
+    text-align: center;
+    padding: clamp(30px, 6vw, 50px) clamp(20px, 5vw, 40px);
+    gap: clamp(20px, 4vw, 30px);
+  }
+  
+  .content-border .logo {
+    margin-bottom: 0;
+    width: 15px;
+    min-width: 50px;
+  }
+  
+  .content-border .about {
+    font-size: clamp(15px, 2.2vw, 17px);
+    text-align: center;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #bottom {
+    text-align: center;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .image-collage {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(4, 1fr);
+    min-height: auto;
+    height: auto;
+  }
+  
+  .image-collage span {
+    min-height: clamp(280px, 50vh, 400px);
+  }
+  
+  .image-collage span::after {
+    font-size: clamp(20px, 4vw, 24px);
+  }
+}
+
+/* Mobile Portrait */
+@media (max-width: 480px) {
+  .slideshow {
+    min-height: clamp(120px, 25vh, 250px);
+  }
+  
+  .mySlides img {
+    height: clamp(120px, 25vh, 250px);
+  }
+  
+  .content-border {
+    padding: clamp(25px, 6vw, 40px) clamp(15px, 5vw, 30px);
+    gap: 20px;
+  }
+  
+  .content-border .logo {
+    min-width: clamp(150px, 50vw, 220px);
+  }
+  
+  .content-border .about {
+    font-size: clamp(14px, 3.5vw, 16px);
+    line-height: 1.7;
+  }
+
+  #bottom {
+    text-align: center;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .image-collage span {
+    min-height: clamp(250px, 45vh, 350px);
+  }
+  
+  .image-collage span::after {
+    font-size: clamp(18px, 5vw, 22px);
+    padding: 0 15px;
+  }
+  
+  .image-collage span:hover img {
+    transform: scale(1.1);
+  }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 360px) {
+  .content-border .logo {
+    min-width: clamp(130px, 55vw, 180px);
+  }
+  
+  .content-border .about {
+    font-size: 14px;
+  }
+
+  #bottom {
+    text-align: center;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .image-collage span {
+    min-height: clamp(220px, 40vh, 300px);
+  }
+  
+  .image-collage span::after {
+    font-size: 16px;
+  }
+}

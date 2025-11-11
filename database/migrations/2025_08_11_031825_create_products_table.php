@@ -28,6 +28,7 @@ return new class extends Migration
             $table->integer('quantity')->nullable(); // optional: could be total of all sizes
             $table->decimal('price', 10, 2)->nullable();
             $table->decimal('discount_price')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

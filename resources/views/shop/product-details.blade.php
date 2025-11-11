@@ -1,9 +1,8 @@
 @extends('layouts.default')
-<link href="{{ asset('css/product-details.css') }}" rel="stylesheet" />
 <script src="{{ asset('script/product-details.js') }}"></script>
-
 @section('maincontent')
 <div class="product-container">
+
     <!-- Enhanced Product Image Gallery -->
     <div class="product-image">
         <div class="main-image-container">
@@ -44,12 +43,9 @@
         <h1 class="product-title">{{ $product->name }}</h1>
 
         @if (!is_null($product->discount_price) && $product->discount_price > 0)
-            <!-- Discounted price -->
             <p class="discount-price">₱ {{ number_format($product->discount_price, 2) }}</p>
-            <!-- Original crossed-out price -->
             <p class="original-price"><s>₱ {{ number_format($product->price, 2) }}</s></p>
         @else
-            <!-- Regular price only -->
             <p class="price">₱ {{ number_format($product->price, 2) }}</p>
         @endif
 
@@ -102,43 +98,33 @@
         </div>
 
         <!-- Enhanced Action Forms -->
-        <div class="product-actions">
-            <form action="{{ route('cart-page', $product->id) }}" method="POST" id="add-to-cart-form">
+        <div class="product-page-actions">
+            <form action="{{ route('add-to-cart', $product->id) }}" method="POST" id="add-to-cart-form" class="w-full">
                 @csrf
-                <!-- Send quantity -->
                 <input type="hidden" name="quantity" id="cart-quantity" value="1">
-                
-                <!-- Send selected size -->
                 <input type="hidden" name="size" id="selected-size" value="{{ $firstAvailableSize }}">
-                
-                <!-- Send correct price -->
-                <input type="hidden" name="price" value="{{ $product->discount_price && $product->discount_price > 0 ? $product->discount_price : $product->price }}">
-                
-                <button type="submit" class="btn-cart" id="add-to-cart-btn">Add to Cart</button>
+                <button type="submit" class="btn-primary-color btn-lg w-full" id="add-to-cart-btn">Add to Cart</button>
             </form>
-             @if(auth()->check())
-                <form action="{{ route('buy-now', $product->id) }}" method="POST" id="buy-now-form">
+            
+            @if(auth()->check())
+                <form action="{{ route('buy-now', $product->id) }}" method="POST" id="buy-now-form" class="w-full">
                     @csrf
                     <input type="hidden" name="quantity" id="buy-quantity" value="1">
                     <input type="hidden" name="size" id="buy-size" value="{{ $firstAvailableSize }}">
-                    <input type="hidden" name="price" 
-                        value="{{ $product->discount_price && $product->discount_price > 0 ? $product->discount_price : $product->price }}">
                     <input type="hidden" name="buy_now" value="1">
-                    <button type="submit" class="btn-buy">Buy it now</button>
+                    <button type="submit" class="btn-primary-color btn-lg w-full">Buy it now</button>
                 </form>
             @else
                 <x-auth-modal />
-                <button type="button" class="btn-buy" onclick="showAuthModal()">Buy it now</button>
+                <button type="button" class="btn-primary-color btn-lg w-full" onclick="showAuthModal()">Buy it now</button>
             @endif
 
         </div>
 
-        <!-- Extra Info -->
         <p class="product-note">
-           {{ $product->description }}
+        {{ $product->description }}
         </p>
 
-        <!-- Accordion -->
         <details>
             <summary>Sizing and Information</summary>
             <img src="{{ asset('img/model/BYOND SIZE CHART.jpg') }}" width="300px" height="300px" alt="">
@@ -147,67 +133,103 @@
             <summary>Shipping and Returns</summary>
             <p>Details about shipping...</p>
         </details>
-    </div>
 </div>
 
-<x-cart-confirmation/>
+<!-- toast -->
+<x-toast-notif />
+
 <script>
-    let selectedSize = '{{ $firstAvailableSize }}';
-    let maxStock = {{ $firstAvailableSize ? $sizes[$firstAvailableSize] : 1 }};
+let selectedSize = '{{ $firstAvailableSize }}';
+let maxStock = {{ $firstAvailableSize ? $sizes[$firstAvailableSize] : 1 }};
 
-    // Intercept Add to Cart form submission
-    document.getElementById('add-to-cart-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        const actionUrl = this.action;
-        
-        fetch(actionUrl, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update cart count in header
-                updateCartCount(data.cartCount);
-                
-                // Show confirmation modal
-                const message = data.message || 'Product added to cart successfully!';
-                document.getElementById('cartModalMessage').textContent = message;
-                showCartModal();
-            } else {
-                // Show error
-                alert(data.message || 'Something went wrong');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again.');
-        });
+document.getElementById('add-to-cart-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const actionUrl = this.action;
+    const submitButton = this.querySelector('button[type="submit"]');
+    
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Adding...';
+    
+    fetch(actionUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            updateCartCount(data.cartCount);
+            showToast(data.message || "Added to cart");
+        } else {
+            alert(data.message || 'Something went wrong');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    })
+    .finally(() => {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
     });
+});
 
-    // Existing auth modal functions
-    function showAuthModal() {
-        document.getElementById('authModal').style.display = 'flex';
+function updateCartCount(count) {
+    const cartBadges = document.querySelectorAll('.cart-count, #cart-count, [data-cart-count]');
+    cartBadges.forEach(badge => {
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'flex' : 'none';
+        badge.classList.add('cart-updated');
+        setTimeout(() => {
+            badge.classList.remove('cart-updated');
+        }, 600);
+    });
+}
+
+function showAuthModal() {
+    const modal = document.getElementById('authModal');
+    if (modal) {
+        modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
+}
 
-    function closeAuthModal() {
-        document.getElementById('authModal').style.display = 'none';
+function closeAuthModal() {
+    const modal = document.getElementById('authModal');
+    if (modal) {
+        modal.style.display = 'none';
         document.body.style.overflow = 'auto';
     }
+}
 
-    // Close modal when clicking outside modal content
-    document.getElementById('authModal')?.addEventListener('click', function(e) {
-        if (e.target === this) closeAuthModal();
-    });
+document.getElementById('authModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeAuthModal();
+});
 
-    // Make it globally accessible
-    window.showAuthModal = showAuthModal;
+window.showAuthModal = showAuthModal;
+window.closeAuthModal = closeAuthModal;
+window.updateCartCount = updateCartCount;
+
+function showToast(message) {
+    const toast = document.getElementById('toast-notification');
+    toast.textContent = message;
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2000);
+}
 </script>
 @stack('scripts')
 @endsection

@@ -1,63 +1,197 @@
-
 .footerMain {
-    color: white;
-    background: #762c21;;
-    padding: 10px 10%;
+    background-color: #020202;
+    color: #fff;
+    text-align: center;
+    padding: 40px 20px 20px;
+    font-family: Arial, sans-serif;
 }
 
-.footerMain .link {
+.footer-content {
+    max-width: 800px;
+    margin: 0 auto 30px;
     display: flex;
-    justify-content: center;
-    padding: 30px 0;
-    margin: 0 30px;
-    border-bottom: solid 1px white;
-}
-
-.footerMain ul li {
-    margin: 0 30px;
-}
-
-.footerMain .copyright {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 5%;
-}
-
-.footerMain .copyright .sm-icon {
-    display: flex;
-
-}
-
-.footerMain .copyright .sm-icon li {
-    margin: 0 10px;
-}
-
-@media(max-width:768px){
-  .footerMain {
-  padding: 20px 5%;
-  text-align: center;
-
-  }
-
-  .footerMain .link {
-    flex-direction: row;
-    align-items: center;
-    padding: 10px 0;
-  }
-
-  .footerMain ul li {
-    margin: 15px 0;
-    font-size: 14px;
-    padding: 10px 0px;
-  }
-
-  .footerMain .copyright {
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-  }
+}
 
-  .footerMain .copyright .sm-icon {
+.signupForm {
+    margin-bottom: 35px;
+}
+
+.signupForm .main-heading {
+    font-size: 22px;
+    color: #fff;
+    font-weight: bold;
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.signupForm .description {
+    font-size: 13px;
+    color: #fff;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-signup {
+    display: block;
+    width: 100%;
+    max-width: 600px;
+    margin-top: 50px;
+    padding: 12px 30px;
+    background-color: #7b3d30;
+    color: #fff;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 5px;
+    border: none;
+    transition: background-color 0.6s;
+}
+
+.btn-signup:hover {
+    background-color: #f4eedf;
+    color: #020202;
+    transition: background-color 0.6s, color 0.6s;
+}
+
+.footer-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.sm-icon {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
     justify-content: center;
-  }
+    gap: 50px;
+}
+
+.sm-icon li a {
+    color: #fff;
+    font-size: 22px;
+    transition: color 0.3s;
+    display: inline-block;
+}
+
+.sm-icon li a:hover {
+    color: #7b3d30;
+    transition: color 1s;
+}
+.footer-logo img {
+    max-width: 300px;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    border-top: 1px solid #333;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.footer-links li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 1s;
+}
+
+.footer-links li a:hover {
+    color: #7b3d30;
+}
+
+.copyright {
+    display: none;
+}
+
+.copyright .payment-methods img {
+    height: 20px;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .footerMain {
+        padding: 30px 15px 15px;
+    }
+    
+    .footer-content {
+        margin-bottom: 20px;
+    }
+    
+    .signupForm {
+        margin-bottom: 25px;
+    }
+    
+    .signupForm .main-heading {
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+    
+    .signupForm .description {
+        font-size: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .btn-signup {
+      margin-left: 25%;
+        font-size: 10px;
+        padding: 10px 25px;
+        max-width: 50%;
+    }
+    
+    
+    .footer-logo {
+        gap: 12px;
+    }
+    
+    .sm-icon {
+        gap: 20px;
+    }
+    
+    .footer-logo img {
+        max-width: 150px;
+    }
+    
+    .footer-links {
+        flex-wrap: wrap;
+        font-size: 16px;
+        gap: 20px;
+        padding-top: 15px;
+        padding-bottom: 15px;
+    }
+    
+    .footer-links li a {
+        font-size: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-links {
+        gap: 15px 20px;
+    }
+    
+    .sm-icon {
+        gap: 18px;
+    }
 }

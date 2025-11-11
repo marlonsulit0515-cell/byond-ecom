@@ -69,20 +69,6 @@
     font-weight: 600;
     transition: 0.2s;
 }
-.btn-primary {
-    background: #111;
-    color: #fff;
-}
-.btn-primary:hover {
-    background: #333;
-}
-.btn-secondary {
-    background: #f4f4f4;
-    color: #111;
-}
-.btn-secondary:hover {
-    background: #ddd;
-}
 
 /* Close button */
 .modal-close {

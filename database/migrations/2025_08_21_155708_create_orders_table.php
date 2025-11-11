@@ -17,7 +17,10 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('order_number')->unique();
             $table->string('status')->default('pending'); // pending, processing, shipped, completed, cancelled
+            $table->text('cancellation_reason')->nullable();
+            $table->text('cancellation_comments')->nullable();
             $table->decimal('total', 10, 2);
+            $table->decimal('shipping_fee', 10, 2)->default(0);
             
             // Billing
             $table->string('full_name');
@@ -31,10 +34,10 @@ return new class extends Migration
 
             // Shipping
             $table->string('delivery_option')->default('ship'); // ship | pickup
-            $table->string('tracking_number')->nullable()->after('status');
+            $table->string('tracking_number')->nullable();
             $table->boolean('same_as_billing')->default(true);
             $table->string('shipping_address')->nullable();
-            $table->decimal('shipping_fee', 10, 2)->default(0)->after('total');
+            
 
             $table->timestamps();
         });

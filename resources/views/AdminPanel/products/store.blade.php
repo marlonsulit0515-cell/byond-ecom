@@ -3,12 +3,18 @@
 @section('maincontent')
 <div class="p-6">
     <div class="flex justify-between items-center mb-6">
-        {{-- Changed text-white to text-gray-900 assuming the main dashboard background is light, or adjust based on your layout --}}
         <h1 class="text-2xl font-bold text-gray-900">Products</h1>
-        <a href="{{ route('admin.add-product') }}" 
-           class="px-4 py-2 rounded-lg bg-[#1f0c35] hover:bg-black text-white font-semibold shadow-md transition">
-            Add New Product
-        </a>
+        <div class="flex gap-3">
+            <a href="{{ route('admin.add-product') }}" 
+               class="btn-primary-color btn-md">
+                Add New Product
+            </a>
+
+            <a href="{{ route('admin.trashed-products') }}" 
+               class="btn-secondary-color btn-md">
+                View Trash
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -17,97 +23,106 @@
     </div>
     @endif
 
-    <div class="overflow-x-auto shadow-lg rounded-lg">
-        <table class="w-full border-collapse text-sm">
-            <thead class="bg-[#1f0c35] text-white uppercase text-xs tracking-wide">
-                <tr>
-                    <th class="p-3 text-left">Image</th>
-                    <th class="p-3 text-left">Product Name</th>
-                    <th class="p-3 text-left">Description</th>
-                    <th class="p-3 text-left">Category</th>
-                    <th class="p-3 text-left">Price</th>
-                    <th class="p-3 text-left">Discount</th>
-                    <th class="p-3 text-center">S</th>
-                    <th class="p-3 text-center">M</th>
-                    <th class="p-3 text-center">L</th>
-                    <th class="p-3 text-center">XL</th>
-                    <th class="p-3 text-center">2XL</th>
-                    <th class="p-3 text-center">Total</th>
-                    <th class="p-3 text-center">Edit</th>
-                    <th class="p-3 text-center">Delete</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @forelse ($product as $products)
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="p-3 text-center">
-                        @php
-                            $images = [
-                                ['src' => '/product/' . $products->image, 'label' => 'Main Image']
-                            ];
-                            if($products->hover_image) {
-                                $images[] = ['src' => '/product/' . $products->hover_image, 'label' => 'Hover View'];
-                            }
-                            if($products->closeup_image) {
-                                $images[] = ['src' => '/product/' . $products->closeup_image, 'label' => 'Close-up View'];
-                            }
-                            if($products->model_image) {
-                                $images[] = ['src' => '/product/' . $products->model_image, 'label' => 'Model View'];
-                            }
-                        @endphp
-                        <img src="/product/{{ $products->image }}" 
-                             alt="{{ $products->name }}" 
-                             class="clickable-image w-14 h-14 object-cover rounded-md border border-gray-300 cursor-pointer"
-                             data-product-name="{{ $products->name }}"
-                             data-images='@json($images)'>
-                    </td>
-                    <td class="p-3 font-medium text-gray-900">{{ $products->name }}</td>
-                    <td class="p-3 text-gray-600">{{ Str::limit($products->description, 40) }}</td>
-                    <td class="p-3">{{ $products->category }}</td>
-                    <td class="p-3 font-semibold text-gray-900">₱{{ number_format($products->price, 2) }}</td>
-                    <td class="p-3 text-red-600">
-                        @if($products->discount_price)
-                            ₱{{ number_format($products->discount_price, 2) }}
-                        @else
-                            <span class="text-gray-400">—</span>
-                        @endif
-                    </td>
-                    <td class="p-3 text-center">{{ $products->stock_s ?? 0 }}</td>
-                    <td class="p-3 text-center">{{ $products->stock_m ?? 0 }}</td>
-                    <td class="p-3 text-center">{{ $products->stock_l ?? 0 }}</td>
-                    <td class="p-3 text-center">{{ $products->stock_xl ?? 0 }}</td>
-                    <td class="p-3 text-center">{{ $products->stock_2xl ?? 0 }}</td>
-                    <td class="p-3 text-center font-bold text-[#1f0c35]">
-                        {{ $products->quantity ?? 0 }}
-                    </td>
-                    <td class="p-3 text-center">
-                        <a href="{{ url('/update_product', $products->id) }}" 
-                           class="px-3 py-1 rounded bg-green-600 hover:bg-green-700 text-white text-xs font-semibold shadow">
-                            Edit
-                        </a>
-                    </td>
-                    <td class="p-3 text-center">
-                        <a href="{{ url('/delete_product', $products->id) }}" 
-                           onclick="return confirm('Are you sure you want to delete this product?')" 
-                           class="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-xs font-semibold shadow">
-                            Delete
-                        </a>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="14" class="p-6 text-center text-gray-500">
-                        No products found. <a href="{{ route('admin.add-product') }}" class="text-[#1f0c35] hover:underline">Add your first product</a>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+  <div class="admin-table-wrapper">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Product Name</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Discount</th>
+                <th class="text-center">S</th>
+                <th class="text-center">M</th>
+                <th class="text-center">L</th>
+                <th class="text-center">XL</th>
+                <th class="text-center">2XL</th>
+                <th class="text-center">Total</th>
+                <th class="text-center">Edit</th>
+                <th class="text-center">Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($product as $products)
+            <tr>
+                <td class="text-center">
+                    @php
+                        $images = [
+                            ['src' => '/product/' . $products->image, 'label' => 'Main Image']
+                        ];
+                        if($products->hover_image) {
+                            $images[] = ['src' => '/product/' . $products->hover_image, 'label' => 'Hover View'];
+                        }
+                        if($products->closeup_image) {
+                            $images[] = ['src' => '/product/' . $products->closeup_image, 'label' => 'Close-up View'];
+                        }
+                        if($products->model_image) {
+                            $images[] = ['src' => '/product/' . $products->model_image, 'label' => 'Model View'];
+                        }
+                    @endphp
+                    <img src="/product/{{ $products->image }}" 
+                         alt="{{ $products->name }}" 
+                         class="table-image"
+                         data-product-name="{{ $products->name }}"
+                         data-images='@json($images)'>
+                </td>
+                <td class="text-primary">{{ $products->name }}</td>
+                <td class="text-secondary">{{ Str::limit($products->description, 40) }}</td>
+                <td class="text-secondary">{{ $products->category }}</td>
+                <td class="text-price">₱{{ number_format($products->price, 2) }}</td>
+                <td class="text-discount">
+                    @if($products->discount_price)
+                        ₱{{ number_format($products->discount_price, 2) }}
+                    @else
+                        <span class="text-muted">—</span>
+                    @endif
+                </td>
+                <td class="text-center text-secondary">{{ $products->stock_s ?? 0 }}</td>
+                <td class="text-center text-secondary">{{ $products->stock_m ?? 0 }}</td>
+                <td class="text-center text-secondary">{{ $products->stock_l ?? 0 }}</td>
+                <td class="text-center text-secondary">{{ $products->stock_xl ?? 0 }}</td>
+                <td class="text-center text-secondary">{{ $products->stock_2xl ?? 0 }}</td>
+                <td class="text-center text-stock">
+                    {{ $products->quantity ?? 0 }}
+                </td>
+                <td class="text-center">
+                    <a href="{{ url('/update_product', $products->id) }}" 
+                       class="action-btn action-btn-edit">
+                        Edit
+                    </a>
+                </td>
+                <td class="text-center">
+                    <a href="{{ url('/delete_product', $products->id) }}" 
+                       onclick="return confirm('Are you sure you want to move this product to trash?')" 
+                       class="action-btn action-btn-delete">
+                        Delete
+                    </a>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="14" class="empty-state">
+                    <div class="empty-state-content">
+                        <div class="empty-state-icon">📦</div>
+                        <h3 class="empty-state-title">No products found</h3>
+                        <p class="empty-state-text">
+                            <a href="{{ route('admin.add-product') }}" class="empty-state-link">Add your first product</a>
+                        </p>
+                    </div>
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
 
-    <div class="mt-6">
-        {{ $product->links() }}
-    </div>
+    @if($product->hasPages())
+        <div class="mt-8 mb-12 flex justify-center">
+            {{ $product->appends(request()->input())->links('vendor.pagination.pagination-custom') }}
+        </div>
+    @endif
+
 </div>
 
 <div id="imageModal" 

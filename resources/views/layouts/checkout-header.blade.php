@@ -3,7 +3,7 @@
         <!-- Logo -->
         <div class="flex-shrink-0">
             <a href="{{ route('home') }}" class="block w-36 sm:w-44">
-                <img src="{{ asset('img/logo/Byond-logo-black.png') }}" alt="Byond Logo" class="w-full h-auto">
+                <img src="{{ asset('img/logo/Byond.Co_Primary_Logo_White.webp') }}" alt="Byond Logo" class="w-full h-auto">
             </a>
         </div>
 

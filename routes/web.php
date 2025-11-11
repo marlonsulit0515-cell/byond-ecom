@@ -105,44 +105,18 @@ Route::get('/auth/google/callback', [AuthenticatedSessionController::class, 'han
 |
 */
 Route::middleware(['auth', \App\Http\Middleware\UserMiddleware::class])->group(function () {
-Route::get('/homepage', [UserController::class, 'index'])->name('userdash');
-Route::get('/My-Dashboard', [UserController::class, 'user_dashboard'])->name('user.dashboard.legacy');
-
-
-Route::get('/dashboard/orders', [UserController::class, 'myOrders'])->name('orders.dashboard');
-
-Route::get('/user-dashboard', [UserController::class, 'dashboard'])
-    ->name('user.dashboard');
-
-// Alternative route for dashboard (if you prefer /user/dashboard)
-Route::get('/user/dashboard', [UserController::class, 'dashboard'])
-    ->name('user.dashboard.alt');
-
-// Orders with filtering and pagination
-Route::get('/user/orders', [UserController::class, 'orders'])
-    ->name('user.orders');
-
-// Order Details/Receipt
-Route::get('/user/orders/{id}', [UserController::class, 'orderDetails'])
-    ->name('user.order.details')
-    ->where('id', '[0-9]+'); // Ensure ID is numeric
-
-// AJAX Route for Order Status Updates
-Route::get('/user/orders/{id}/status', [UserController::class, 'getOrderStatus'])
-    ->name('user.order.status')
-    ->where('id', '[0-9]+');
-
-// Additional useful routes you might need:
-
-// Cancel Order
-Route::post('/user/orders/{id}/cancel', [UserController::class, 'cancelOrder'])
-    ->name('user.order.cancel')
-    ->where('id', '[0-9]+');
-
-// Confirm Delivery
-Route::post('/user/orders/{id}/confirm-delivery', [UserController::class, 'confirmDelivery'])
-    ->name('user.order.confirm-delivery')
-    ->where('id', '[0-9]+');
+    Route::get('/user/dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
+    
+    // Orders
+    Route::get('/user/orders', [UserController::class, 'orders'])->name('user.orders');
+    Route::get('/user/orders/{id}', [UserController::class, 'orderDetails'])->name('user.orders.details');
+    Route::get('/user/orders/{id}/status', [UserController::class, 'getOrderStatus'])->name('user.orders.status');
+    
+    // Order Actions
+    Route::post('/user/orders/{id}/confirm-delivery', [UserController::class, 'confirmDelivery'])->name('user.orders.confirm-delivery');
+    Route::post('/user/orders/{id}/request-cancellation', [UserController::class, 'requestCancellation'])->name('orders.request-cancellation');
+    Route::post('/user/orders/{id}/buy-again', [UserController::class, 'buyAgain'])->name('user.orders.buy-again');
+    
 });
 
 /*
@@ -167,7 +141,11 @@ Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.
 Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function () {
     Route::get('/view_category', [AdminController::class, 'view_category'])->name('admin.categories');
     Route::post('/view_category', [AdminController::class, 'add_category'])->name('admin.categories');
+    Route::get('/trashed_categories', [AdminController::class, 'trashed_categories'])->name('admin.trashed-categories');
+    Route::get('/restore_category/{id}', [AdminController::class, 'restore_category'])->name('admin.restore-category');
+    Route::get('/force_delete_category/{id}', [AdminController::class, 'force_delete_category'])->name('admin.force-delete-category');
     Route::get('/delete_category/{id}', [AdminController::class, 'delete_category'])->name('admin.delete-category');
+
 
     Route::get('/manage_product', [AdminController::class, 'manage_product'])->name('admin.manage-product');
     Route::get('/add_product', [AdminController::class, 'add_product'])->name('admin.add-product');
@@ -175,6 +153,10 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
     Route::get('/show_product', [AdminController::class, 'show_product'])->name('admin.show-product');
     Route::get('/update_product/{id}', [AdminController::class, 'update_product'])->name('admin.update-product');
     Route::post('/update_confirmation/{id}', [AdminController::class, 'update_confirmation'])->name('admin.update-changes');
+    Route::get('/trashed_products', [AdminController::class, 'trashed_products'])->name('admin.trashed-products');
+    Route::get('/restore_product/{id}', [AdminController::class, 'restore_product'])->name('admin.restore-product');
+    Route::get('/force_delete_product/{id}', [AdminController::class, 'force_delete_product'])->name('admin.force-delete-product');
+    Route::get('/delete_product/{id}', [AdminController::class, 'delete_product'])->name('admin.delete-product');
     Route::get('/delete_product/{id}', [AdminController::class, 'delete_product'])->name('admin.delete-product');
 
     Route::get('/shipping-settings', [ShippingRateController::class, 'shipping_settings'])->name('admin.shipping-settings');
@@ -222,9 +204,10 @@ Route::middleware(['auth', \App\Http\Middleware\UserMiddleware::class])->group(f
 
 Route::get('/cart', [CartController::class, 'view_cart'])->name('cart');
 Route::get('/view-cart', [CartController::class, 'view_cart'])->name('view-cart');
-Route::post('/add-to-cart/{id}', [CartController::class, 'add_to_cart'])->name('cart-page');
-Route::patch('/update-cart', [CartController::class, 'update_cart'])->name('update-cart');
-Route::delete('/remove-from-cart', [CartController::class, 'remove_from_cart'])->name('remove-from-cart');
+Route::post('/cart/add/{id}', [CartController::class, 'add_to_cart'])->name('add-to-cart');
+Route::match(['post', 'patch'], '/cart/update', [CartController::class, 'update_cart'])->name('update-cart');
+Route::match(['post', 'delete'], '/cart/remove', [CartController::class, 'remove_from_cart'])->name('remove-from-cart');
+
 Route::post('/buy-now/{id}', [CartController::class, 'buy_now'])->name('buy-now');
 
 /*
