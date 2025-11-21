@@ -1,9 +1,9 @@
 @extends('layouts.default')
 @section('maincontent')
 
-{{-- Page Title --}}
+
 <div class="page-title">
-    <h1>{{ isset($category) ? $category : 'Shop Page' }}</h1>
+    <h1 class="category">{{ isset($category) ? $category : 'All Products' }}</h1>
 </div>
 
 {{-- Top Bar with Sort + Filter + Active Filters --}}

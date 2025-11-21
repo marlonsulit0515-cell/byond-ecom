@@ -70,11 +70,11 @@
             </div>
         </main>
     </div>
-<script src="{{ asset('script/toast-notif.js') }}"></script>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="{{ asset('script/toast-notif.js') }}"></script>
 <script src="{{ asset('script/admin-order-management.js') }}" defer></script>
 <script src="{{ asset('script/admin-product-form.js') }}"></script>
-    <script>
+<script>
         // Sidebar toggle for mobile
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
@@ -90,6 +90,6 @@
             sidebar.classList.add('-translate-x-full');
             overlay.classList.add('hidden');
         });
-    </script>
+</script>
 </body>
 </html>

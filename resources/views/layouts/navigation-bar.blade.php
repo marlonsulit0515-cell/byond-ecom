@@ -68,15 +68,13 @@
                 $cart = session()->get('cart', []);
                 $cartCount = array_sum(array_column($cart, 'quantity'));
             @endphp
-            @if($cartCount > 0)
-                <span class="util__badge cart-count" data-cart-count aria-label="{{ $cartCount }} items in cart">
-                    {{ $cartCount }}
-                </span>
-            @else
-                <span class="util__badge cart-count" data-cart-count style="display: none;" aria-label="0 items in cart">
-                    0
-                </span>
-            @endif
+            <span class="util__badge cart-count" 
+                id="cart-count-badge" 
+                data-cart-count 
+                style="display: {{ $cartCount > 0 ? 'flex' : 'none' }};" 
+                aria-label="{{ $cartCount }} items in cart">
+                {{ $cartCount }}
+            </span>
         </a>
     </div>
 </nav>
@@ -113,5 +111,3 @@
 
 <!-- Mobile Menu Overlay -->
 <div class="sidebar-overlay" aria-hidden="true"></div>
-
-<!-- JavaScript -->

@@ -58,11 +58,7 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
     
     Route::get('/products', function () {
     return view('AdminPanel.products.index');
-    })->name('admin.index');
-
-    Route::get('/manage-product', function () {
-    return view('AdminPanel.products.manage');
-    })->name('admin.manage-product');
+    })->name('admin.index');    
     
     Route::get('/create-new', function () {
     return view('AdminPanel.products.create');
@@ -207,6 +203,7 @@ Route::get('/view-cart', [CartController::class, 'view_cart'])->name('view-cart'
 Route::post('/cart/add/{id}', [CartController::class, 'add_to_cart'])->name('add-to-cart');
 Route::match(['post', 'patch'], '/cart/update', [CartController::class, 'update_cart'])->name('update-cart');
 Route::match(['post', 'delete'], '/cart/remove', [CartController::class, 'remove_from_cart'])->name('remove-from-cart');
+Route::get('/cart/count', [CartController::class, 'getCartCount']);
 
 Route::post('/buy-now/{id}', [CartController::class, 'buy_now'])->name('buy-now');
 
@@ -237,7 +234,8 @@ Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function (
 */
 
 Route::post('/checkout/process', [CheckoutController::class, 'checkout'])->name('checkout.process');
- Route::post('/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('calculate.shipping');
+Route::post('/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('calculate.shipping');
+Route::get('/payment/success', [CheckoutController::class, 'paymentSuccess'])->name('payment.success');
 
 // PayPal routes
 Route::prefix('paypal')->group(function () {
@@ -247,20 +245,7 @@ Route::prefix('paypal')->group(function () {
     Route::get('/cancel', [CheckoutController::class, 'paypalCancel'])
         ->name('paypal.cancel');
 });
-// Paymongo Routes
-Route::prefix('paymongo')->group(function () {
-    Route::get('/success', [CheckoutController::class, 'paymongoSuccess'])
-        ->name('paymongo.success');
-    
-    Route::get('/cancel', [CheckoutController::class, 'paymongoCancel'])
-        ->name('paymongo.cancel');
-});
 
-/*
-|--------------------------------------------------------------------------
-| Additional Routes
-|--------------------------------------------------------------------------
-*/
 
 Route::get('/my-orders', function () {
     return view('UserPanel.user-orders');

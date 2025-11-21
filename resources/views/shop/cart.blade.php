@@ -21,7 +21,6 @@
         </div>
 
         <div class="grid lg:grid-cols-3 gap-10">
-            <!-- Cart Items Section -->
             <div class="lg:col-span-2 bg-white divide-y divide-gray-300">
                 @php $total = 0; @endphp
 
@@ -29,14 +28,12 @@
                     @php
                         $product = \App\Models\Product::find($details['product_id'] ?? $id);
                         
-                        // Get current price from database
                         $currentPrice = $product 
                             ? (($product->discount_price && $product->discount_price > 0) 
                                 ? $product->discount_price 
                                 : $product->price)
                             : $details['price'];
                         
-                        // Update cart price if it differs
                         if ($currentPrice != $details['price']) {
                             $cart[$id]['price'] = $currentPrice;
                         }
@@ -49,13 +46,13 @@
                     @endphp
 
                     <div class="flex sm:items-center max-sm:flex-col gap-6 py-6 cart-row" 
-                         data-id="{{ $id }}" 
-                         data-price="{{ $currentPrice }}"
-                         data-max-stock="{{ $currentStock }}">
+                        data-id="{{ $id }}" 
+                        data-price="{{ $currentPrice }}"
+                        data-max-stock="{{ $currentStock }}">
                         <div class="w-32 h-32 shrink-0">
                             <img src="/product/{{ $details['image'] }}" 
-                                 alt="{{ $details['name'] }}" 
-                                 class="w-full h-full object-contain" />
+                                alt="{{ $details['name'] }}" 
+                                class="w-full h-full object-contain" />
                         </div>
 
                         <div class="flex items-start gap-4 w-full">
@@ -91,11 +88,11 @@
                                         -
                                     </button>
                                     <input type="number" 
-                                           value="{{ $details['quantity'] }}" 
-                                           min="1" 
-                                           max="{{ $currentStock }}"
-                                           class="quantity-input w-12 text-center border-0 outline-none bg-transparent" 
-                                           readonly />
+                                            value="{{ $details['quantity'] }}" 
+                                            min="1" 
+                                            max="{{ $currentStock }}"
+                                            class="quantity-input w-12 text-center border-0 outline-none bg-transparent" 
+                                            readonly />
                                     <button type="button" 
                                             class="quantity-increase cursor-pointer w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded"
                                             {{ $details['quantity'] >= $currentStock ? 'disabled' : '' }}>
@@ -111,7 +108,6 @@
                 @endforeach
             </div>
 
-            <!-- Order Summary Section -->
             <div class="border border-gray-200 rounded-xl shadow-sm p-6 lg:sticky lg:top-6 bg-white h-max w-full max-w-sm mx-auto mb-8 lg:mb-16">
                 <h3 class="text-lg font-semibold text-slate-900 border-b border-gray-300 pb-4 text-center">
                     Order Summary
@@ -156,12 +152,10 @@
             <x-auth-modal />
         @endguest
     @else
-        {{-- Empty Cart State with Fixed Dimensions --}}
         <div class="flex flex-col items-center justify-center min-h-[60vh] transition-opacity duration-300 opacity-100" id="empty-cart-container">
             <h2 class="text-2xl font-semibold text-slate-900 mb-2">Your cart is empty</h2>
             
             <div class="flex flex-col items-center justify-center p-6 text-center text-gray-500 bg-white">
-                <!-- Reserve space to prevent layout shift -->
                 <div class="relative w-[220px] h-[250px] md:w-[450px] md:h-[400px] overflow-hidden rounded-lg">
                     <img 
                         class="absolute inset-0 w-full h-full object-contain" 
@@ -169,12 +163,10 @@
                         alt="Empty Content Logo"
                         width="450"
                         height="505"
-                        loading="lazy"
+                        loading="eager"
                     >
                 </div>
             </div>
-            
-           
         </div>
             <div style="display: flex; justify-content: center;">
                 <a href="{{ route('shop-page') }}" class="btn-primary-color btn-lg mt">

@@ -4,17 +4,139 @@
     let currentOrderId = null;
     let currentOrderNumber = null;
     let savedFormData = null;
+    let isLoadingOrders = false;
 
     const cancellationModal = document.getElementById('cancellationModal');
     const confirmationModal = document.getElementById('confirmationModal');
     const cancellationForm = document.getElementById('cancellationForm');
+    const ordersContainer = document.getElementById('ordersContainer');
+    const loadingState = document.getElementById('loadingState');
 
     document.addEventListener('DOMContentLoaded', function() {
         setupCancellationListeners();
-        setupOtherButtons();
+        setupOrderButtons();
+        setupStatusNavigation();
     });
 
-    function setupCancellationListeners() {
+    // ============ STATUS NAVIGATION ============
+    function setupStatusNavigation() {
+        // Desktop tabs
+        document.querySelectorAll('.status-tab').forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                const status = this.getAttribute('data-status');
+                
+                // Update active tab styling
+                document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('is-active'));
+                this.classList.add('is-active');
+                
+                // Update mobile dropdown to match
+                const dropdown = document.getElementById('statusFilter');
+                if (dropdown) dropdown.value = status;
+                
+                // Fetch orders
+                fetchOrders(status);
+            });
+        });
+
+        // Mobile dropdown
+        const statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) {
+            statusFilter.addEventListener('change', function() {
+                const status = this.value;
+                
+                // Update desktop tabs to match
+                document.querySelectorAll('.status-tab').forEach(tab => {
+                    tab.classList.remove('is-active');
+                    if (tab.getAttribute('data-status') === status) {
+                        tab.classList.add('is-active');
+                    }
+                });
+                
+                // Fetch orders
+                fetchOrders(status);
+            });
+        }
+    }
+
+    async function fetchOrders(status) {
+        if (isLoadingOrders) return;
+        
+        isLoadingOrders = true;
+        const url = new URL(window.location.origin + '/user/orders');
+        if (status && status !== 'all') url.searchParams.set('status', status);
+
+        try {
+            loadingState.style.display = 'flex';
+            ordersContainer.style.opacity = '0.4';
+
+            const response = await fetch(url, {
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+
+            if (data.success && data.html) {
+                ordersContainer.innerHTML = data.html;
+                
+                // Re-apply event listeners after DOM update
+                setupOrderButtons();
+                
+                // Update URL without page reload
+                const newUrl = status === 'all' ? '/user/orders' : `/user/orders?status=${status}`;
+                history.pushState({ status }, '', newUrl);
+            }
+
+        } catch (err) {
+            console.error('Failed to load orders:', err);
+            showToast('Failed to load orders. Please try again.', 'error');
+        } finally {
+            loadingState.style.display = 'none';
+            ordersContainer.style.opacity = '1';
+            isLoadingOrders = false;
+        }
+    }
+
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function(e) {
+        if (e.state && e.state.status) {
+            const status = e.state.status;
+            
+            // Update UI to match URL
+            document.querySelectorAll('.status-tab').forEach(tab => {
+                tab.classList.remove('is-active');
+                if (tab.getAttribute('data-status') === status) {
+                    tab.classList.add('is-active');
+                }
+            });
+            
+            const dropdown = document.getElementById('statusFilter');
+            if (dropdown) dropdown.value = status;
+            
+            fetchOrders(status);
+        }
+    });
+
+    // ============ ORDER BUTTONS ============
+    function setupOrderButtons() {
+        // Copy tracking number
+        window.copyTrackingNumber = async function(trackingNumber) {
+            try {
+                await navigator.clipboard.writeText(trackingNumber);
+                showToast('Tracking number copied!', 'success');
+            } catch (e) {
+                showToast('Failed to copy', 'error');
+            }
+        };
+
+        // Request cancellation buttons
+        document.querySelectorAll('[data-action="request-cancel"]').forEach(button => {
+            button.replaceWith(button.cloneNode(true));
+        });
+        
         document.querySelectorAll('[data-action="request-cancel"]').forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -27,6 +149,55 @@
             });
         });
 
+        // Confirm delivery buttons
+        document.querySelectorAll('[data-action="confirm-delivery"]').forEach(button => {
+            button.replaceWith(button.cloneNode(true));
+        });
+        
+        document.querySelectorAll('[data-action="confirm-delivery"]').forEach(button => {
+            button.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const orderId = this.getAttribute('data-id');
+                const originalText = this.textContent;
+                
+                this.disabled = true;
+                this.textContent = 'Processing...';
+                
+                try {
+                    const csrf = document.querySelector('meta[name="csrf-token"]');
+                    const response = await fetch(`/user/orders/${orderId}/confirm-delivery`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrf.getAttribute('content'),
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showToast(data.message || 'Order confirmed!', 'success');
+                        setTimeout(() => {
+                            const currentTab = document.querySelector('.status-tab.is-active');
+                            const currentStatus = currentTab ? currentTab.getAttribute('data-status') : 'all';
+                            fetchOrders(currentStatus);
+                        }, 1500);
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    showToast(error.message, 'error');
+                    this.disabled = false;
+                    this.textContent = originalText;
+                }
+            });
+        });
+    }
+
+    // ============ CANCELLATION MODAL ============
+    function setupCancellationListeners() {
         document.querySelectorAll('[data-dismiss="modal"]').forEach(btn => {
             btn.addEventListener('click', () => closeCancellationModal());
         });
@@ -205,8 +376,10 @@
                 savedFormData = null;
                 
                 setTimeout(() => {
-                    window.location.reload();
-                }, 2000);
+                    const currentTab = document.querySelector('.status-tab.is-active');
+                    const currentStatus = currentTab ? currentTab.getAttribute('data-status') : 'all';
+                    fetchOrders(currentStatus);
+                }, 1500);
             } else {
                 throw new Error(result.message || 'Request failed');
             }
@@ -337,86 +510,6 @@
         setTimeout(() => {
             toast.remove();
         }, 5000);
-    }
-
-    function setupOtherButtons() {
-        window.copyTrackingNumber = async function(trackingNumber) {
-            try {
-                await navigator.clipboard.writeText(trackingNumber);
-                showToast('Tracking number copied!', 'success');
-            } catch (e) {
-                showToast('Failed to copy', 'error');
-            }
-        };
-
-        document.querySelectorAll('.status-tab').forEach(tab => {
-            tab.addEventListener('click', function(e) {
-                e.preventDefault();
-                const status = this.getAttribute('data-status');
-                const url = new URL(window.location);
-                
-                if (status === 'all') {
-                    url.searchParams.delete('status');
-                } else {
-                    url.searchParams.set('status', status);
-                }
-                
-                window.location.href = url.toString();
-            });
-        });
-
-        const statusFilter = document.getElementById('statusFilter');
-        if (statusFilter) {
-            statusFilter.addEventListener('change', function() {
-                const status = this.value;
-                const url = new URL(window.location);
-                
-                if (status === 'all') {
-                    url.searchParams.delete('status');
-                } else {
-                    url.searchParams.set('status', status);
-                }
-                
-                window.location.href = url.toString();
-            });
-        }
-
-        document.querySelectorAll('[data-action="confirm-delivery"]').forEach(button => {
-            button.addEventListener('click', async function(e) {
-                e.preventDefault();
-                const orderId = this.getAttribute('data-id');
-                const originalText = this.textContent;
-                
-                this.disabled = true;
-                this.textContent = 'Processing...';
-                
-                try {
-                    const csrf = document.querySelector('meta[name="csrf-token"]');
-                    const response = await fetch(`/user/orders/${orderId}/confirm-delivery`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': csrf.getAttribute('content'),
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        showToast(data.message || 'Order confirmed!', 'success');
-                        setTimeout(() => window.location.reload(), 2000);
-                    } else {
-                        throw new Error(data.message);
-                    }
-                } catch (error) {
-                    showToast(error.message, 'error');
-                    this.disabled = false;
-                    this.textContent = originalText;
-                }
-            });
-        });
     }
 
 })();

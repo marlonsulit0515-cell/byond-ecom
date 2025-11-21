@@ -673,116 +673,220 @@ class CheckoutController extends Controller
     /**
      * Handle successful PayPal payment
      */
-    public function paypalSuccess(Request $request)
-    {
-        try {
-            // Verify callback authenticity
-            $sessionPayPalOrderId = session('paypal_order_id');
-            $requestPayPalOrderId = $request->get('token');
-            
-            if (!$sessionPayPalOrderId || $sessionPayPalOrderId !== $requestPayPalOrderId) {
-                Log::warning('PayPal callback verification failed', [
-                    'session_order_id' => $sessionPayPalOrderId,
-                    'request_token' => $requestPayPalOrderId,
-                    'ip' => $request->ip(),
-                    'user_agent' => $request->userAgent()
-                ]);
+    // Add this method to your CheckoutController
+
+/**
+ * Handle successful PayPal payment - Updated with modal support
+ */
+// Add/Update these methods in your CheckoutController
+
+/**
+ * Handle successful PayPal payment - Shows modal on success page
+ */
+        public function paypalSuccess(Request $request)
+        {
+            try {
+                // Verify callback authenticity
+                $sessionPayPalOrderId = session('paypal_order_id');
+                $requestPayPalOrderId = $request->get('token');
                 
-                return $this->redirectToCheckoutWithError('Invalid payment callback. Please try again.');
-            }
-
-            // Verify order ownership
-            $orderId = session('order_id');
-            $orderHash = session('order_hash');
-            
-            $order = $this->getVerifiedOrder($orderId);
-
-            // Verify order hasn't been tampered with
-            if (!$this->verifyOrderHash($order, $orderHash)) {
-                return $this->redirectToCheckoutWithError('Security verification failed.');
-            }
-
-            $provider = new PayPalClient;
-            $provider->setApiCredentials(config('paypal'));
-            $provider->getAccessToken();
-
-            $paypalOrderId = $request->get('token');
-            $response = $provider->capturePaymentOrder($paypalOrderId);
-
-            if (isset($response['status']) && $response['status'] === 'COMPLETED') {
-                // Verify payment amount matches order
-                $paypalAmount = 0;
-                if (isset($response['purchase_units'][0]['payments']['captures'][0]['amount']['value'])) {
-                    $paypalAmount = (float) $response['purchase_units'][0]['payments']['captures'][0]['amount']['value'];
-                }
-                
-                $orderTotal = (float) $order->total;
-                
-                // Allow small rounding differences (1 peso)
-                if (abs($paypalAmount - $orderTotal) > 1) {
-                    Log::error('PayPal amount mismatch', [
-                        'order_id' => $order->id,
-                        'order_total' => $orderTotal,
-                        'paypal_amount' => $paypalAmount
+                if (!$sessionPayPalOrderId || $sessionPayPalOrderId !== $requestPayPalOrderId) {
+                    Log::warning('PayPal callback verification failed', [
+                        'session_order_id' => $sessionPayPalOrderId,
+                        'request_token' => $requestPayPalOrderId,
+                        'ip' => $request->ip(),
+                        'user_agent' => $request->userAgent()
                     ]);
                     
-                    return $this->redirectToCheckoutWithError('Payment amount verification failed.');
+                    return redirect()->route('payment.success')
+                        ->with([
+                            'payment_failed' => true,
+                            'error' => 'Invalid payment callback. Please try again.'
+                        ]);
                 }
 
-                // Complete payment processing
-                $this->completePayment($order, $response['id'], 'PayPal');
+                // Verify order ownership
+                $orderId = session('order_id');
+                $orderHash = session('order_hash');
+                
+                $order = $this->getVerifiedOrder($orderId);
 
-                // Clear session
-                $this->clearCheckoutSession();
+                // Verify order hasn't been tampered with
+                if (!$this->verifyOrderHash($order, $orderHash)) {
+                    return redirect()->route('payment.success')
+                        ->with([
+                            'payment_failed' => true,
+                            'error' => 'Security verification failed.'
+                        ]);
+                }
 
-                return redirect()
-                    ->route('paypal.success', $order->order_number)
-                    ->with('success', 'Payment successful! Your order has been placed.');
+                $provider = new PayPalClient;
+                $provider->setApiCredentials(config('paypal'));
+                $provider->getAccessToken();
+
+                $paypalOrderId = $request->get('token');
+                $response = $provider->capturePaymentOrder($paypalOrderId);
+
+                if (isset($response['status']) && $response['status'] === 'COMPLETED') {
+                    // Verify payment amount matches order
+                    $paypalAmount = 0;
+                    if (isset($response['purchase_units'][0]['payments']['captures'][0]['amount']['value'])) {
+                        $paypalAmount = (float) $response['purchase_units'][0]['payments']['captures'][0]['amount']['value'];
+                    }
+                    
+                    $orderTotal = (float) $order->total;
+                    
+                    // Allow small rounding differences (1 peso)
+                    if (abs($paypalAmount - $orderTotal) > 1) {
+                        Log::error('PayPal amount mismatch', [
+                            'order_id' => $order->id,
+                            'order_total' => $orderTotal,
+                            'paypal_amount' => $paypalAmount
+                        ]);
+                        
+                        return redirect()->route('payment.success')
+                            ->with([
+                                'payment_failed' => true,
+                                'error' => 'Payment amount verification failed.'
+                            ]);
+                    }
+
+                    // Complete payment processing
+                    $this->completePayment($order, $response['id'], 'PayPal');
+
+                    // Load order with relationships for modal
+                    $order->load(['items', 'payment']);
+
+                    // Prepare order data for modal
+                    $orderData = [
+                        'order_number' => $order->order_number,
+                        'created_at' => $order->created_at->format('F j, Y'),
+                        'full_name' => $order->full_name,
+                        'phone' => $order->phone,
+                        'province' => $order->province,
+                        'city' => $order->city,
+                        'barangay' => $order->barangay,
+                        'postal_code' => $order->postal_code,
+                        'billing_address' => $order->billing_address,
+                        'total' => $order->total,
+                        'shipping_fee' => $order->shipping_fee,
+                        'payment_method' => $order->payment->method ?? 'paypal',
+                        'items' => $order->items->map(function($item) {
+                            return [
+                                'product_name' => $item->product_name,
+                                'size' => $item->size,
+                                'quantity' => $item->quantity,
+                                'total' => $item->total,
+                            ];
+                        })->toArray()
+                    ];
+
+                    // Clear checkout-specific session
+                    $this->clearCheckoutSession();
+
+                    // Redirect to success page with modal trigger
+                    return redirect()
+                        ->route('payment.success')
+                        ->with([
+                            'success' => 'Payment successful! Your order has been placed.',
+                            'show_modal' => true,
+                            'order_data' => $orderData
+                        ]);
+                }
+
+                Log::warning('PayPal payment not completed', [
+                    'status' => $response['status'] ?? 'unknown',
+                    'order_id' => session('order_id')
+                ]);
+
+                return redirect()->route('payment.success')
+                    ->with([
+                        'payment_failed' => true,
+                        'error' => 'Payment was not completed. Please try again.'
+                    ]);
+
+            } catch (\Exception $e) {
+                Log::error('PayPal success callback error', [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'ip' => $request->ip()
+                ]);
+                
+                return redirect()->route('payment.success')
+                    ->with([
+                        'payment_failed' => true,
+                        'error' => 'Payment verification failed. Please contact support.'
+                    ]);
+            }
+        }
+
+        /**
+         * Handle cancelled PayPal payment
+         */
+        public function paypalCancel(Request $request)
+        {
+            try {
+                DB::transaction(function () use ($request) {
+                    if (session('order_id')) {
+                        $order = Order::where('id', session('order_id'))
+                                    ->where('user_id', Auth::id())
+                                    ->lockForUpdate()
+                                    ->first();
+                        
+                        if ($order && $order->status === 'pending') {
+                            Log::info('PayPal payment cancelled', [
+                                'user_id' => Auth::id(),
+                                'order_id' => $order->id,
+                                'order_number' => $order->order_number,
+                                'ip' => $request->ip()
+                            ]);
+                            
+                            $order->delete();
+                        }
+                    }
+                });
+            } catch (\Exception $e) {
+                Log::error('PayPal cancel error', [
+                    'error' => $e->getMessage(),
+                    'user_id' => Auth::id()
+                ]);
             }
 
-            Log::warning('PayPal payment not completed', [
-                'status' => $response['status'] ?? 'unknown',
-                'order_id' => session('order_id')
-            ]);
-
-            return $this->redirectToCheckoutWithError('Payment was not completed.');
-
-        } catch (\Exception $e) {
-            Log::error('PayPal success callback error', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'ip' => $request->ip()
-            ]);
+            $this->clearCheckoutSession();
             
-            return $this->redirectToCheckoutWithError('Payment verification failed.');
+            return redirect()->route('payment.success')
+                ->with([
+                    'payment_failed' => true,
+                    'error' => 'Payment was cancelled. Your order has been removed.'
+                ]);
         }
-    }
 
-    /**
-     * Handle cancelled PayPal payment
-     */
-    public function paypalCancel(Request $request)
-    {
-        return $this->handleCancelledPayment($request, 'PayPal');
-    }
+        /**
+         * Payment success page (shows modal for success, error message for failure)
+         */
+        public function paymentSuccess()
+        {
+            if (!Auth::check()) {
+                return redirect()->route('login')->with('error', 'You must be logged in to view this page.');
+            }
 
-    /**
-     * Order confirmation page
-     */
-    public function confirmation($orderNumber)
-    {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'You must be logged in to view order confirmations.');
+            return view('shop.payment-status');
         }
-        
-        $order = Order::where('order_number', $orderNumber)
-            ->where('user_id', Auth::id())
-            ->with(['items.product', 'payment'])
-            ->firstOrFail();
 
-        return view('shop.confirmation', compact('order'));
-    }
+        /**
+         * View order details page (for dashboard "Details" button)
+         */
+        public function viewOrderDetails($orderNumber)
+        {
+            $order = Order::where('order_number', $orderNumber)
+                ->where('user_id', Auth::id())
+                ->with(['items.product', 'payment', 'user'])
+                ->firstOrFail();
+
+            // Return the order details page
+            return view('UserPanel.user-orders', compact('order'));
+        }
 
     /**
      * Reduce product stock after successful payment (with idempotency)

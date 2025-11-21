@@ -1,4 +1,4 @@
-  :root {
+:root {
     /* COLORS */
     --color-primary: #762c21;
     --color-primary-muted: #d1cac0;
@@ -103,7 +103,7 @@
   }
  
   a {
-    font-family: var(--font-heading);
+    font-family: var(--font-size-small);
     color: var(--color-primary);
     text-decoration: none;
     transition: color 0.3s ease;
@@ -191,7 +191,7 @@
   user-select: none;
   transition: box-shadow .2s, transform .1s;
   width: auto;
-  min-width: max-content;    /* responsive fix */
+  min-width: max-content;
 }
 
 /* PRIMARY COLOR STYLE */
@@ -199,18 +199,17 @@
 .btn-primary-color {
   background-color: var(--color-primary);
   color: var(--color-secondary-white);
-  font-family: var(--font-heading);
+  font-family: var(--font-title);
 }
 .btn-primary-color:hover {
   background-color: var(--color-primary-light);
   color: var(--color-primary);
-  border: 1px solid var(--color-primary);
   transition: background-color 0.6s, color 0.6s;
 }
 
 .btn-secondary-color {
   background-color: var(--color-primary-muted);
-  border: 1px solid #222222;
+  font-family: var(--font-title);
   color: #222222;
 }
 .btn-secondary-color:hover {
@@ -220,37 +219,41 @@
   transition: background-color 0.6s, color 0.6s;
 }
 
-/* buttond sizes */
+/* button sizes */
 .btn-sm {
-  padding: .35rem 1rem;
-  font-size: .85rem;
+  padding: 0.35rem 1rem;
+  font-size: 0.85rem;
   border-radius: 10px;
 }
 
 .btn-md {
-  padding: .6rem 1.25rem;
+  padding: 0.6rem 1.25rem;
   font-size: 1rem;
   border-radius: 10px;
 }
 
 .btn-lg {
-  padding: .9rem 1.75rem;
+  padding: 0.9rem 1.75rem;
   font-size: 1.15rem;
   border-radius: 10px;
 }
 
 
-
  
   @media (max-width: 767px) {
+     :root {
+    /* Smaller font sizes for mobile */
+    --font-size-base: 14px;
+    --font-size-small: 12px;
+     }
     body, p, span {
       font-size: 15px;
     }
 
-    h1 { font-size: 28px; }
-    h2 { font-size: 22px; }
-    h3 { font-size: 18px; }
-
+    h1 { font-size: 26px; }
+    h2 { font-size: 20px; }
+    h3 { font-size: 17px; }
+    
     .title {
       font-size: 18px;
     }
@@ -258,24 +261,26 @@
     .nav-link {
       font-size: 14px;
     }
-    .btn-sm {
-    padding: 0.3rem 0.75rem;
-    font-size: 0.8rem;
+
+  /* Responsive button sizes for mobile */
+  .btn-sm {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.75rem;
   }
 
   .btn-md {
-    padding: 0.5rem 1rem;
-    font-size: 0.95rem;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.875rem;
   }
 
   .btn-lg {
-    padding: 0.75rem 1.5rem;
-    font-size: 1.05rem;
+    padding: 0.65rem 1.25rem;
+    font-size: 1rem;
   }
 
   }
 
-.toast{
+.toast {
     position: fixed;
     top: 20px;
     right: 20px;
@@ -290,14 +295,24 @@
     animation: fadeInUp .3s ease;
 }
 
-@keyframes fadeInUp{
-    from{
-        opacity:0;
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
         transform: translateY(30px);
     }
-    to{
-        opacity:1;
+    to {
+        opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .toast {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        text-align: center;
     }
 }
 
@@ -310,19 +325,4 @@
     text-align:center;
     font-size: var(--font-size-small);
   }
-  .btn-sm {
-    padding: 0.3rem 0.75rem;
-    font-size: 0.8rem;
-  }
-
-  .btn-md {
-    padding: 0.5rem 1rem;
-    font-size: 0.95rem;
-  }
-
-  .btn-lg {
-    padding: 0.75rem 1.5rem;
-    font-size: 1.05rem;
-  }
-
 }

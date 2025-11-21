@@ -50,12 +50,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class);
     }
-
-    /**
-     * Get the user's cart items.
-     */
-    public function cartItems()
-    {
-        return $this->hasMany(Cart::class);
-    }
 }

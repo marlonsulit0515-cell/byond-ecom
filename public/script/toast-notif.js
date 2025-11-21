@@ -1,6 +1,8 @@
-window.showToast = function(message, duration = 2500){
+window.showToast = function(message, duration = 2500) {
     const toast = document.getElementById('toast');
     const msg = document.getElementById('toast-message');
+
+    if (!toast || !msg) return;
 
     msg.innerText = message;
     toast.style.display = 'block';
@@ -8,4 +10,4 @@ window.showToast = function(message, duration = 2500){
     setTimeout(() => {
         toast.style.display = 'none';
     }, duration);
-}
+};

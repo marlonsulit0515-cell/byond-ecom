@@ -7,7 +7,7 @@
         <svg class="sidenav-icon" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
           <path d="M6 2a2 2 0 00-2 2v2h12V4a2 2 0 00-2-2H6zM4 8h12v8a2 2 0 01-2 2H6a2 2 0 01-2-2V8z"></path>
         </svg>
-        <span class="sidenav-text">My Orders</span>
+        <span class="sidenav-text">My Purchase</span>
       </a>
     </li>
 

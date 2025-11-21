@@ -79,11 +79,6 @@ class AdminController extends Controller
         return view('AdminPanel.products.trashed-categories', compact('data'));
     }
 
-    public function manage_product()
-    {
-        return view('AdminPanel.products.manage');
-    }
-
     public function add_product(Request $request)
     {
         // Only show non-deleted categories

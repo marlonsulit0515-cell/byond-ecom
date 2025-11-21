@@ -37,20 +37,14 @@
 .thumbnail {
     width: 60px;
     height: 60px;
-    object-fit: cover;
+     object-fit: contain; /* Shows full image without cropping */
+    background: #f8f8f8; /* Add background color for consistency */ 
     border-radius: 8px;
     cursor: pointer;
     border: 2px solid transparent;
-    transition: border-color 0.3s ease;
+
 }
 
-.thumbnail.active {
-    border-color: #000000;
-}
-
-.thumbnail:hover {
-    border-color: #565B7A;
-}
 
 /* Title & Price */
 .product-title {
@@ -166,6 +160,14 @@
     border: none;
     font-size: 1rem;
     color: #000000;
+}
+.qty-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.qty-btn:disabled:hover {
+    background-color: transparent;
 }
 
 /* Action Buttons */

@@ -1,4 +1,14 @@
-// Utility Functions
+// ==================== CONFIGURATION ====================
+
+const CONFIG = {
+    ANIMATION_DURATION: 600,
+    FADE_DURATION: 300,
+    DEBOUNCE_DELAY: 300,
+    REQUEST_TIMEOUT: 10000,
+    MAX_RETRIES: 2,
+    STOCK_REFRESH_INTERVAL: 30000 // Refresh stock every 30 seconds
+};
+
 function formatCurrency(amount) {
     return '₱' + parseFloat(amount).toLocaleString('en-US', {
         minimumFractionDigits: 2,
@@ -6,23 +16,76 @@ function formatCurrency(amount) {
     });
 }
 
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
+/**
+ * Debounce function to limit rapid calls
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// ==================== REQUEST QUEUE MANAGER ====================
+
+class RequestQueue {
+    constructor() {
+        this.queue = [];
+        this.processing = false;
+    }
+
+    async add(requestFn) {
+        return new Promise((resolve, reject) => {
+            this.queue.push({ requestFn, resolve, reject });
+            this.process();
+        });
+    }
+
+    async process() {
+        if (this.processing || this.queue.length === 0) return;
+
+        this.processing = true;
+        const { requestFn, resolve, reject } = this.queue.shift();
+
+        try {
+            const result = await requestFn();
+            resolve(result);
+        } catch (error) {
+            reject(error);
+        } finally {
+            this.processing = false;
+            this.process(); // Process next in queue
+        }
+    }
+}
+
+const requestQueue = new RequestQueue();
+
+// ==================== CART COUNT MANAGEMENT ====================
+
 function updateCartCount(count) {
-    // Update all cart badge elements
     const cartBadges = document.querySelectorAll('.cart-count, #cart-count, [data-cart-count], .util__badge');
     
     cartBadges.forEach(badge => {
-        badge.textContent = count;
+        // Announce to screen readers
+        badge.setAttribute('aria-live', 'polite');
+        badge.setAttribute('aria-atomic', 'true');
         
-        // Show/hide based on count
-        if (count > 0) {
-            badge.style.display = 'flex';
-        } else {
-            badge.style.display = 'none';
-        }
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'flex' : 'none';
         
         // Add animation
         badge.classList.add('cart-updated');
-        setTimeout(() => badge.classList.remove('cart-updated'), 600);
+        setTimeout(() => badge.classList.remove('cart-updated'), CONFIG.ANIMATION_DURATION);
     });
     
     // Update items count text
@@ -32,17 +95,96 @@ function updateCartCount(count) {
     }
 }
 
-function updateCartTotals(total) {
-    const formattedTotal = formatCurrency(total);
-    
-    const cartTotal = document.getElementById('cart-total');
-    if (cartTotal) cartTotal.textContent = formattedTotal;
-    
-    const cartTotalBottom = document.getElementById('cart-total-bottom');
-    if (cartTotalBottom) cartTotalBottom.textContent = formattedTotal;
+function initializeCartCount() {
+    fetch('/cart/count', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+        },
+        signal: AbortSignal.timeout(CONFIG.REQUEST_TIMEOUT)
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch cart count');
+        return response.json();
+    })
+    .then(data => {
+        if (data && typeof data.cartCount !== 'undefined') {
+            updateCartCount(data.cartCount);
+        }
+    })
+    .catch(error => {
+        console.error('Cart count initialization failed:', error);
+        // Silently fail - don't disrupt user experience
+    });
 }
 
-function disableButtonTemporarily(button, loadingText = '...') {
+// ==================== CART TOTALS ====================
+
+function updateCartTotals(total) {
+    if (typeof total === 'undefined' || total === null) return;
+    
+    const formattedTotal = formatCurrency(total);
+    
+    ['cart-total', 'cart-total-bottom'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = formattedTotal;
+        }
+    });
+}
+
+// ==================== API REQUEST HANDLER WITH RETRY ====================
+
+async function makeCartRequest(url, options = {}, retryCount = 0) {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT);
+
+        const response = await fetch(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': getCSRFToken(),
+                ...options.headers
+            },
+            signal: controller.signal,
+            ...options
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Validate response structure
+        if (!data || typeof data !== 'object') {
+            throw new Error('Invalid response format');
+        }
+
+        return data;
+
+    } catch (error) {
+        // Retry logic for network errors
+        if (retryCount < CONFIG.MAX_RETRIES && 
+            (error.name === 'AbortError' || error.message.includes('fetch'))) {
+            console.log(`Retrying request... (${retryCount + 1}/${CONFIG.MAX_RETRIES})`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+            return makeCartRequest(url, options, retryCount + 1);
+        }
+        throw error;
+    }
+}
+
+// ==================== BUTTON STATE MANAGEMENT ====================
+
+function disableButton(button, loadingText = '...') {
+    if (!button) return () => {};
+
     const originalText = button.textContent;
     const originalDisabled = button.disabled;
     
@@ -50,177 +192,328 @@ function disableButtonTemporarily(button, loadingText = '...') {
     button.textContent = loadingText;
     button.style.opacity = '0.5';
     button.style.cursor = 'not-allowed';
+    button.setAttribute('aria-busy', 'true');
     
     return function restore() {
-        button.disabled = originalDisabled;
         button.textContent = originalText;
+        button.disabled = originalDisabled;
         button.style.opacity = '';
         button.style.cursor = '';
+        button.removeAttribute('aria-busy');
     };
 }
 
-function makeCartRequest(url, options = {}) {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+// ==================== QUANTITY MANAGEMENT ====================
+
+function updateQuantityButtons(row, quantity, maxStock) {
+    const increaseBtn = row.querySelector('.quantity-increase');
+    const decreaseBtn = row.querySelector('.quantity-decrease');
     
-    return fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': csrfToken,
-            ...options.headers
-        },
-        ...options
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    });
+    if (decreaseBtn) {
+        decreaseBtn.disabled = quantity <= 1;
+        decreaseBtn.style.opacity = quantity <= 1 ? '0.5' : '1';
+        decreaseBtn.style.cursor = quantity <= 1 ? 'not-allowed' : 'pointer';
+        decreaseBtn.setAttribute('aria-label', `Decrease quantity (current: ${quantity})`);
+    }
+    
+    if (increaseBtn) {
+        const shouldDisable = quantity >= maxStock;
+        increaseBtn.disabled = shouldDisable;
+        increaseBtn.style.opacity = shouldDisable ? '0.5' : '1';
+        increaseBtn.style.cursor = shouldDisable ? 'not-allowed' : 'pointer';
+        increaseBtn.setAttribute('aria-label', 
+            shouldDisable
+                ? `Maximum stock reached (${maxStock})` 
+                : `Increase quantity (current: ${quantity})`
+        );
+    }
 }
 
-// Quantity Update Handler
-function initQuantityButtons() {
-    document.querySelectorAll('.quantity-increase, .quantity-decrease').forEach(button => {
-        button.addEventListener('click', function() {
-            const row = this.closest('.cart-row');
-            const input = row.querySelector('.quantity-input');
-            const id = row.dataset.id;
-            const price = parseFloat(row.dataset.price);
-            const maxStock = parseInt(row.dataset.maxStock);
-            let currentQty = parseInt(input.value);
-            let newQty = currentQty;
+function handleQuantityChange(row, isIncrease) {
+    const input = row.querySelector('.quantity-input');
+    const id = row.dataset.id;
+    const price = parseFloat(row.dataset.price);
+    const maxStock = parseInt(row.dataset.maxStock);
+    let currentQty = parseInt(input.value);
+    
+    if (isNaN(currentQty) || currentQty < 1) currentQty = 1;
+    
+    let newQty = isIncrease ? currentQty + 1 : currentQty - 1;
+    
+    // Validate boundaries
+    if (newQty < 1 || newQty > maxStock) return;
+    
+    // Queue the request to prevent race conditions
+    requestQueue.add(() => updateQuantity(row, id, currentQty, newQty, price, maxStock));
+}
 
-            if (this.classList.contains('quantity-increase') && currentQty < maxStock) {
-                newQty++;
-            } else if (this.classList.contains('quantity-decrease') && currentQty > 1) {
-                newQty--;
-            }
+// Debounced quantity update
+const debouncedQuantityUpdate = debounce((row, id, oldQty, newQty, price, maxStock) => {
+    requestQueue.add(() => updateQuantity(row, id, oldQty, newQty, price, maxStock));
+}, CONFIG.DEBOUNCE_DELAY);
 
-            if (newQty !== currentQty) {
-                updateQuantity(row, id, newQty, price, maxStock);
-            }
+// ==================== STOCK REFRESH FOR CART ====================
+
+async function refreshCartItemStock(row) {
+    const id = row.dataset.id;
+    const size = row.dataset.size;
+    const productId = row.dataset.productId;
+    
+    if (!productId || !size) {
+        console.log('Missing product ID or size for stock refresh');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/products/${productId}/stock?size=${encodeURIComponent(size)}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            signal: AbortSignal.timeout(CONFIG.REQUEST_TIMEOUT)
         });
-    });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        
+        if (data && typeof data.stock !== 'undefined') {
+            // Update the max stock in the row
+            const oldMaxStock = parseInt(row.dataset.maxStock);
+            row.dataset.maxStock = data.stock;
+            
+            const input = row.querySelector('.quantity-input');
+            if (input) {
+                input.setAttribute('max', data.stock);
+            }
+            
+            const currentQty = parseInt(input?.value || 1);
+            
+            // Force re-enable buttons first
+            const increaseBtn = row.querySelector('.quantity-increase');
+            const decreaseBtn = row.querySelector('.quantity-decrease');
+            
+            if (increaseBtn) {
+                increaseBtn.disabled = false;
+                increaseBtn.style.opacity = '1';
+                increaseBtn.style.cursor = 'pointer';
+            }
+            if (decreaseBtn) {
+                decreaseBtn.disabled = false;
+                decreaseBtn.style.opacity = '1';
+                decreaseBtn.style.cursor = 'pointer';
+            }
+            
+            // Small delay then update properly
+            setTimeout(() => {
+                updateQuantityButtons(row, currentQty, data.stock);
+            }, 10);
+            
+            // Log stock changes for debugging
+            if (oldMaxStock !== data.stock) {
+                console.log(`Stock updated for cart item ${id}: ${oldMaxStock} → ${data.stock}`);
+            }
+        }
+    } catch (error) {
+        console.log('Stock refresh failed for item:', id, error.message);
+    }
 }
 
-function updateQuantity(row, id, newQty, price, maxStock) {
+function refreshAllCartStocks() {
+    const cartRows = document.querySelectorAll('.cart-row[data-product-id][data-size]');
+    console.log(`Refreshing stock for ${cartRows.length} cart items`);
+    cartRows.forEach(row => refreshCartItemStock(row));
+}
+
+async function updateQuantity(row, id, oldQty, newQty, price, maxStock) {
     const input = row.querySelector('.quantity-input');
     const increaseBtn = row.querySelector('.quantity-increase');
     const decreaseBtn = row.querySelector('.quantity-decrease');
     const subtotalElement = row.querySelector('.subtotal');
     
-    // Disable buttons during update
-    const restoreIncrease = disableButtonTemporarily(increaseBtn, '...');
-    const restoreDecrease = disableButtonTemporarily(decreaseBtn, '...');
+    const restoreIncrease = disableButton(increaseBtn, '...');
+    const restoreDecrease = disableButton(decreaseBtn, '...');
 
-    // Use global route or fallback
-    const updateRoute = window.cartRoutes?.update || '/cart/update';
+    try {
+        const data = await makeCartRequest('/cart/update', {
+            method: 'POST',
+            body: JSON.stringify({ 
+                id: id, 
+                quantity: newQty,
+                _method: 'PATCH'
+            })
+        });
 
-    makeCartRequest(updateRoute, {
-        method: 'POST',
-        body: JSON.stringify({ 
-            id: id, 
-            quantity: newQty,
-            _method: 'PATCH'
-        })
-    })
-    .then(data => {
-        if (data.success) {
-            // Update price if it changed
-            const currentPrice = data.price || price;
-            
-            if (data.price) {
-                row.dataset.price = data.price;
-            }
-            
-            // Update UI
-            input.value = newQty;
-            subtotalElement.textContent = formatCurrency(data.subtotal);
-            
-            // Update button states
-            decreaseBtn.disabled = newQty <= 1;
-            increaseBtn.disabled = newQty >= maxStock;
-            
-            // Update totals
-            updateCartTotals(data.total);
-            if (data.cartCount !== undefined) {
-                updateCartCount(data.cartCount);
-            }
-        } else {
-            alert(data.message || 'Unable to update quantity');
+        if (!data.success) {
+            throw new Error(data.message || 'Unable to update quantity');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while updating the cart');
-    })
-    .finally(() => {
+        
+        // Update price if changed (for dynamic pricing)
+        if (typeof data.price !== 'undefined') {
+            row.dataset.price = data.price;
+        }
+        
+        // Update stock with server response
+        const updatedMaxStock = typeof data.maxStock !== 'undefined' ? data.maxStock : maxStock;
+        row.dataset.maxStock = updatedMaxStock;
+        input.setAttribute('max', updatedMaxStock);
+        
+        // Update UI
+        input.value = newQty;
+        if (subtotalElement && typeof data.subtotal !== 'undefined') {
+            subtotalElement.textContent = formatCurrency(data.subtotal);
+        }
+        
+        // Force re-enable buttons before updating state
+        if (increaseBtn) {
+            increaseBtn.disabled = false;
+            increaseBtn.style.opacity = '1';
+            increaseBtn.style.cursor = 'pointer';
+        }
+        if (decreaseBtn) {
+            decreaseBtn.disabled = false;
+            decreaseBtn.style.opacity = '1';
+            decreaseBtn.style.cursor = 'pointer';
+        }
+        
+        // Small delay then update properly
+        setTimeout(() => {
+            updateQuantityButtons(row, newQty, updatedMaxStock);
+        }, 10);
+        
+        if (typeof data.total !== 'undefined') {
+            updateCartTotals(data.total);
+        }
+        
+        if (typeof data.cartCount !== 'undefined') {
+            updateCartCount(data.cartCount);
+        }
+
+        // Announce to screen readers
+        announceToScreenReader(`Quantity updated to ${newQty}`);
+        
+        // CRITICAL: Refresh actual stock from database after update
+        // This ensures we have the most up-to-date stock information
+        await refreshCartItemStock(row);
+
+    } catch (error) {
+        console.error('Error updating quantity:', error);
+        
+        // Show user-friendly error message
+        showNotification('error', error.message || 'Failed to update quantity. Please try again.');
+        
+        // Revert to old quantity
+        input.value = oldQty;
+        updateQuantityButtons(row, oldQty, maxStock);
+        
+    } finally {
         restoreIncrease();
         restoreDecrease();
-    });
+    }
 }
 
-// Remove Item Handler
-function initRemoveButtons() {
-    document.querySelectorAll('.remove-from-cart').forEach(button => {
-        button.addEventListener('click', function() {
-            const row = this.closest('.cart-row');
-            const id = row.dataset.id;
+// ==================== REMOVE FROM CART ====================
 
-            if (!confirm('Are you sure you want to remove this item?')) return;
+async function handleRemoveItem(button) {
+    const row = button.closest('.cart-row');
+    if (!row) return;
+    
+    const id = row.dataset.id;
+    const productName = row.querySelector('.product-name')?.textContent || 'this item';
 
-            const restoreButton = disableButtonTemporarily(button, 'Removing...');
+    if (!confirm(`Are you sure you want to remove ${productName}?`)) return;
 
-            const removeRoute = window.cartRoutes?.remove || '/cart/remove';
+    const restoreButton = disableButton(button, 'Removing...');
 
-            makeCartRequest(removeRoute, {
+    try {
+        const data = await requestQueue.add(() => 
+            makeCartRequest('/cart/remove', {
                 method: 'POST',
                 body: JSON.stringify({ 
                     id: id,
                     _method: 'DELETE'
                 })
             })
-            .then(data => {
-                if (data.success) {
-                    // Fade out animation
-                    row.style.transition = 'opacity 0.3s ease';
-                    row.style.opacity = '0';
-                    
-                    setTimeout(() => {
-                        row.remove();
-                        
-                        // Update totals and counts
-                        updateCartTotals(data.total);
-                        if (data.cartCount !== undefined) {
-                            updateCartCount(data.cartCount);
-                        }
-                        
-                        // Reload if cart is empty
-                        if (data.cartEmpty || data.itemCount === 0) {
-                            window.location.reload();
-                        }
-                    }, 300);
-                } else {
-                    alert(data.message || 'Unable to remove item');
-                    restoreButton();
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while removing the item');
-                restoreButton();
-            });
-        });
-    });
+        );
+
+        if (!data.success) {
+            throw new Error(data.message || 'Unable to remove item');
+        }
+        
+        // Fade out animation
+        row.style.transition = `opacity ${CONFIG.FADE_DURATION}ms ease`;
+        row.style.opacity = '0';
+        
+        setTimeout(() => {
+            row.remove();
+            
+            if (typeof data.total !== 'undefined') {
+                updateCartTotals(data.total);
+            }
+            
+            if (typeof data.cartCount !== 'undefined') {
+                updateCartCount(data.cartCount);
+            }
+            
+            announceToScreenReader(`${productName} removed from cart`);
+            
+            // Refresh stock for remaining items
+            refreshAllCartStocks();
+            
+            // Reload if cart is empty
+            if (data.cartEmpty || data.itemCount === 0) {
+                setTimeout(() => window.location.reload(), 500);
+            }
+        }, CONFIG.FADE_DURATION);
+
+    } catch (error) {
+        console.error('Error removing item:', error);
+        showNotification('error', error.message || 'Failed to remove item. Please try again.');
+        restoreButton();
+    }
 }
 
-// Auth Modal Functions
+// ==================== NOTIFICATION SYSTEM ====================
+
+function showNotification(type, message) {
+    // Try to use existing toast system
+    if (typeof window.showToast === 'function') {
+        window.showToast(message);
+        return;
+    }
+    
+    // Fallback to alert
+    alert(message);
+}
+
+function announceToScreenReader(message) {
+    const announcement = document.createElement('div');
+    announcement.setAttribute('role', 'status');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.className = 'sr-only';
+    announcement.textContent = message;
+    document.body.appendChild(announcement);
+    
+    setTimeout(() => announcement.remove(), 3000);
+}
+
+// ==================== AUTH MODAL ====================
+
 function showAuthModal() {
     const modal = document.getElementById('authModal');
     if (modal) {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        modal.setAttribute('aria-hidden', 'false');
+        
+        // Focus trap
+        const focusableElements = modal.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length > 0) {
+            focusableElements[0].focus();
+        }
     }
 }
 
@@ -229,29 +522,94 @@ function closeAuthModal() {
     if (modal) {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
+        modal.setAttribute('aria-hidden', 'true');
     }
 }
 
-// Initialize on DOM ready
-document.addEventListener('DOMContentLoaded', function() {
-    initQuantityButtons();
-    initRemoveButtons();
-    
-    // Auth modal event listeners
+// ==================== EVENT LISTENERS INITIALIZATION ====================
+
+function initQuantityButtons() {
+    // Use event delegation for better performance
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.quantity-increase')) {
+            const row = e.target.closest('.cart-row');
+            if (row) handleQuantityChange(row, true);
+        } else if (e.target.closest('.quantity-decrease')) {
+            const row = e.target.closest('.cart-row');
+            if (row) handleQuantityChange(row, false);
+        }
+    });
+}
+
+function initRemoveButtons() {
+    // Use event delegation
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.remove-from-cart')) {
+            handleRemoveItem(e.target.closest('.remove-from-cart'));
+        }
+    });
+}
+
+function initAuthModal() {
     const authModal = document.getElementById('authModal');
     if (authModal) {
-        authModal.addEventListener('click', function(e) {
-            if (e.target === this) closeAuthModal();
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) closeAuthModal();
         });
     }
     
-    // Close modal on Escape key
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeAuthModal();
     });
+}
+
+// ==================== INITIALIZATION ====================
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCartCount();
+    initQuantityButtons();
+    initRemoveButtons();
+    initAuthModal();
     
-    // Make functions globally accessible
-    window.showAuthModal = showAuthModal;
-    window.closeAuthModal = closeAuthModal;
-    window.updateCartCount = updateCartCount;
+    // Initial stock refresh for all cart items
+    setTimeout(() => {
+        refreshAllCartStocks();
+    }, 500); // Small delay to ensure DOM is fully ready
+    
+    // Periodic stock refresh (every 30 seconds)
+    setInterval(refreshAllCartStocks, CONFIG.STOCK_REFRESH_INTERVAL);
+    
+    console.log('Cart page initialized with stock refresh');
 });
+
+// Handle browser back/forward navigation
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        initializeCartCount();
+        refreshAllCartStocks();
+    }
+});
+
+// Refresh stocks when page becomes visible again
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        console.log('Page visible - refreshing cart stocks');
+        refreshAllCartStocks();
+    }
+});
+
+// Refresh stocks when window regains focus
+window.addEventListener('focus', () => {
+    console.log('Window focused - refreshing cart stocks');
+    refreshAllCartStocks();
+});
+
+// Expose only essential functions globally
+window.cartAPI = {
+    updateCartCount,
+    showAuthModal,
+    closeAuthModal,
+    initializeCartCount,
+    refreshCart: initializeCartCount,
+    refreshStocks: refreshAllCartStocks // Added for manual stock refresh
+};

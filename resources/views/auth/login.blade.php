@@ -105,31 +105,5 @@
 
         </div>
     </div>
-
-    <script>
-        (function() {
-            'use strict';
-
-            const loginForm = document.getElementById('loginForm');
-            const submitBtn = document.getElementById('submitBtn');
-
-            if (loginForm && submitBtn) {
-                loginForm.addEventListener('submit', function(e) {
-                    if (submitBtn.disabled) {
-                        e.preventDefault();
-                        return false;
-                    }
-
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = 'Signing in...';
-
-                    setTimeout(function() {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Sign in';
-                    }, 3000);
-                });
-            }
-        })();
-    </script>
 </body>
 </html>

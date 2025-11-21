@@ -29,8 +29,6 @@
             </strong>
         </div>
 
-
-
        <div class="image-collage">
             <span data-text="Shop now">
                 <a href="{{ route('shop-page') }}">
@@ -59,7 +57,7 @@
 
 
         <div class="content-border">
-            <strong class="about" id="bottom">Lorem ipsum dolor sit amet consectetur adipisicing elit. Ad impedit error eaque dignissimos praesentium ut molestiae excepturi pariatur, suscipit consectetur dolorum et dicta eligendi rem corrupti reprehenderit, quasi neque nesciunt!<br><a href="#">Read more...</a></strong>
+            <strong class="about" id="bottom">BYOND CO. was born from the spirit of independence — a collective for builders, makers, and dreamers. Our name, Build Your Own Next Destination, is both a challenge and an invitation: to carve your own path, chase what fuels you, and create something that lasts. It's about.....<a class="--font-content" href="{{ route('aboutus') }}">read more</a></strong>
             <span class="logo" id="secondary"><img src="{{ asset('img/logo/Byond.Co_Logo_Lockup Bonus_Red Mud.webp') }}" alt="logo" loading="lazy"></span>
         </div>
     </section>

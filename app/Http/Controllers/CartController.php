@@ -18,32 +18,7 @@ class CartController extends Controller
         $categories = Category::all();
         
         if (!empty($cart)) {
-            $productIds = array_column($cart, 'product_id');
-            $products = Product::whereIn('id', $productIds)
-                            ->get()
-                            ->keyBy('id'); 
-            
-            foreach ($cart as $key => &$item) {
-                if (isset($products[$item['product_id']])) {
-                    $product = $products[$item['product_id']];
-                    $stockField = $this->getStockField($item['size'] ?? 'M');
-                    $currentStock = $product->$stockField ?? 0;
-                    
-                    $item['current_stock'] = $currentStock;
-                    $item['image'] = $product->image;
-                    $item['price'] = ($product->discount_price && $product->discount_price > 0) 
-                                    ? $product->discount_price 
-                                    : $product->price;
-
-                    // Auto-adjust quantity if exceeds current stock
-                    if ($item['quantity'] > $currentStock) {
-                        $item['quantity'] = max(1, $currentStock);
-                    }
-                } else {
-                    unset($cart[$key]);
-                }
-            }
-
+            $cart = $this->validateAndUpdateCart($cart);
             session()->put('cart', $cart);
         }
 
@@ -57,94 +32,68 @@ class CartController extends Controller
     {
         try {
             $product = Product::findOrFail($id);
-            $size = $request->size ?? 'M';
-            $requestedQty = (int)($request->quantity ?? 1);
+            $size = strtoupper($request->input('size', 'M'));
+            $requestedQty = max(1, (int)$request->input('quantity', 1));
             
-            // Validate size
-            if (!in_array($size, ['S', 'M', 'L', 'XL', '2XL'])) {
-                $message = "Invalid size selected.";
-                if ($request->ajax() || $request->expectsJson()) {
-                    return response()->json(['success' => false, 'message' => $message]);
-                }
-                return redirect()->back()->with('error', $message);
+            if (!$this->isValidSize($size)) {
+                return $this->respondError('Invalid size selected.', $request);
             }
             
-            // Check stock availability
-            $stockField = $this->getStockField($size);
-            $availableStock = $product->$stockField ?? 0;
+            $availableStock = $this->getProductStock($product->fresh(), $size);
             
             if ($availableStock <= 0) {
-                $message = "Size {$size} is currently out of stock.";
-                if ($request->ajax() || $request->expectsJson()) {
-                    return response()->json(['success' => false, 'message' => $message]);
-                }
-                return redirect()->back()->with('error', $message);
+                return $this->respondError("Size {$size} is currently out of stock.", $request);
             }
             
             $cart = session()->get('cart', []);
-            $cartKey = $id . '_' . $size;
+            $cartKey = "{$id}_{$size}";
             
-            // Calculate total quantity in cart
-            $totalInCart = isset($cart[$cartKey]) ? $cart[$cartKey]['quantity'] : 0;
+            $totalInCart = $cart[$cartKey]['quantity'] ?? 0;
             
-            // Validate stock
             if ($totalInCart + $requestedQty > $availableStock) {
                 $remaining = max(0, $availableStock - $totalInCart);
                 $message = $remaining > 0 
                     ? "Only {$remaining} more available for size {$size}."
                     : "Maximum stock ({$availableStock}) already in cart.";
                 
-                if ($request->ajax() || $request->expectsJson()) {
-                    return response()->json(['success' => false, 'message' => $message]);
-                }
-                return redirect()->back()->with('error', $message);
+                return $this->respondError($message, $request);
             }
-            
-            // Determine price
-            $price = ($product->discount_price && $product->discount_price > 0) ? 
-                    $product->discount_price : $product->price;
 
-            // Add or update cart
+            $price = $this->getProductPrice($product);
+
             if (isset($cart[$cartKey])) {
                 $cart[$cartKey]['quantity'] += $requestedQty;
+                $cart[$cartKey]['price'] = $price;
+                $cart[$cartKey]['current_stock'] = $availableStock; // Add current stock
             } else {
                 $cart[$cartKey] = [
-                    "product_id"     => $id,
-                    "name"           => $product->name,
-                    "size"           => $size,
-                    "quantity"       => $requestedQty,
-                    "price"          => $price,
-                    "image"          => $product->image,
-                    "original_price" => $product->price,
-                    "discount_price" => $product->discount_price,
+                    "product_id" => $id,
+                    "name" => $product->name,
+                    "size" => $size,
+                    "quantity" => $requestedQty,
+                    "price" => $price,
+                    "image" => $product->image,
+                    "current_stock" => $availableStock, // Add current stock
                 ];
             }
 
             session()->put('cart', $cart);
+            $cartCount = $this->getCartItemCount($cart);
             
-            $cartCount = array_sum(array_column($cart, 'quantity'));
+            $message = "Added {$requestedQty} x {$product->name} (Size: {$size}) to cart!";
             
-            if ($request->ajax() || $request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => "Added {$requestedQty} x {$product->name} (Size: {$size}) to cart!",
-                    'cartCount' => $cartCount
-                ]);
-            }
-            
-            return redirect()->back()->with('success', 'Product added to cart successfully!');
+            return $request->expectsJson()
+                ? response()->json([
+                    'success' => true, 
+                    'message' => $message, 
+                    'cartCount' => $cartCount,
+                    'remainingStock' => $availableStock - ($totalInCart + $requestedQty) // NEW
+                ])
+                : redirect()->back()->with('success', 'Product added to cart successfully!');
             
         } catch (\Exception $e) {
-            Log::error('Cart Error: ' . $e->getMessage());
-            
-            if ($request->ajax() || $request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'An error occurred: ' . $e->getMessage()
-                ]);
-            }
-            
-            return redirect()->back()->with('error', 'An error occurred while adding to cart.');
+            Log::error('Cart Add Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return $this->respondError('An error occurred while adding to cart.', $request);
         }
     }
 
@@ -152,88 +101,76 @@ class CartController extends Controller
      * Update cart quantity
      */
     public function update_cart(Request $request)
-    {
-        try {
-            if ($request->id && isset($request->quantity)) {
-                $cart = session()->get('cart', []);
-                $cartId = $request->id;
-                $newQuantity = intval($request->quantity);
-                
-                if (!isset($cart[$cartId])) {
-                    return response()->json([
-                        'success' => false, 
-                        'message' => 'Item not found in cart'
-                    ]);
-                }
-                
-                // Validate stock
-                $productId = $cart[$cartId]['product_id'];
-                $size = $cart[$cartId]['size'] ?? 'M';
-                $product = Product::find($productId);
-                
-                if (!$product) {
-                    return response()->json([
-                        'success' => false, 
-                        'message' => 'Product not found'
-                    ]);
-                }
-                
-                $stockField = $this->getStockField($size);
-                $availableStock = $product->$stockField ?? 0;
-                
-                if ($newQuantity > $availableStock) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "Only {$availableStock} available in stock.",
-                        'maxStock' => $availableStock
-                    ]);
-                }
-                
-                if ($newQuantity < 1) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Quantity must be at least 1'
-                    ]);
-                }
-                
-                // Get current price from product (in case it changed)
-                $currentPrice = ($product->discount_price && $product->discount_price > 0) 
-                    ? $product->discount_price 
-                    : $product->price;
-                
-                // Update cart with current price and quantity
-                $cart[$cartId]["quantity"] = $newQuantity;
-                $cart[$cartId]["price"] = $currentPrice;
-                session()->put('cart', $cart);
-                
-                // Calculate totals
-                $subtotal = $currentPrice * $newQuantity;
-                $total = array_reduce($cart, function($carry, $item) {
-                    return $carry + ((float)$item['price'] * (int)$item['quantity']);
-                }, 0);
-                
-                $cartCount = array_sum(array_column($cart, 'quantity'));
-                
-                return response()->json([
-                    'success' => true,
-                    'subtotal' => $subtotal,
-                    'total' => $total,
-                    'cartCount' => $cartCount,
-                    'quantity' => $newQuantity,
-                    'price' => $currentPrice
-                ]);
-            }
-            
-            return response()->json(['success' => false, 'message' => 'Invalid request']);
-            
-        } catch (\Exception $e) {
-            Log::error('Update Cart Error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false, 
-                'message' => 'An error occurred: ' . $e->getMessage()
-            ]);
+{
+    try {
+        $cartId = $request->input('id');
+        $newQuantity = max(1, (int)$request->input('quantity', 1));
+        
+        if (!$cartId) {
+            return response()->json(['success' => false, 'message' => 'Invalid request'], 400);
         }
+        
+        $cart = session()->get('cart', []);
+        
+        if (!isset($cart[$cartId])) {
+            return response()->json(['success' => false, 'message' => 'Item not found in cart'], 404);
+        }
+        
+        // CRITICAL FIX: Always get fresh product data
+        $product = Product::find($cart[$cartId]['product_id']);
+        
+        if (!$product) {
+            return response()->json(['success' => false, 'message' => 'Product not found'], 404);
+        }
+        
+        $size = $cart[$cartId]['size'] ?? 'M';
+        
+        // CRITICAL FIX: Get real-time stock
+        $availableStock = $this->getProductStock($product, $size);
+        
+        if ($newQuantity > $availableStock) {
+            return response()->json([
+                'success' => false,
+                'message' => "Only {$availableStock} available in stock.",
+                'maxStock' => $availableStock,
+                'quantity' => $cart[$cartId]['quantity'] // Return current quantity
+            ], 400);
+        }
+        
+        // Get current price (in case it changed)
+        $currentPrice = $this->getProductPrice($product);
+        
+        // Update cart with fresh data
+        $cart[$cartId]['quantity'] = $newQuantity;
+        $cart[$cartId]['price'] = $currentPrice;
+        $cart[$cartId]['current_stock'] = $availableStock; // Update stock info
+        
+        session()->put('cart', $cart);
+        
+        // Calculate totals
+        $subtotal = $currentPrice * $newQuantity;
+        $total = $this->calculateCartTotal($cart);
+        $cartCount = $this->getCartItemCount($cart);
+        
+        return response()->json([
+            'success' => true,
+            'subtotal' => $subtotal,
+            'total' => $total,
+            'cartCount' => $cartCount,
+            'quantity' => $newQuantity,
+            'price' => $currentPrice,
+            'maxStock' => $availableStock,
+            'message' => 'Cart updated successfully'
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Update Cart Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+        return response()->json([
+            'success' => false, 
+            'message' => 'An error occurred while updating cart.'
+        ], 500);
     }
+}
 
     /**
      * Remove item from cart
@@ -241,62 +178,171 @@ class CartController extends Controller
     public function remove_from_cart(Request $request)
     {
         try {
-            if ($request->id) {
-                $cart = session()->get('cart', []);
-                
-                if (isset($cart[$request->id])) {
-                    unset($cart[$request->id]);
-                    session()->put('cart', $cart);
-                    
-                    // Calculate new total
-                    $total = array_reduce($cart, function($carry, $item) {
-                        return $carry + ($item['price'] * $item['quantity']);
-                    }, 0);
-                    
-                    $cartCount = array_sum(array_column($cart, 'quantity'));
-                    $cartEmpty = count($cart) === 0;
-                    
-                    return response()->json([
-                        'success' => true,
-                        'total' => $total,
-                        'cartCount' => $cartCount,
-                        'cartEmpty' => $cartEmpty,
-                        'itemCount' => count($cart)
-                    ]);
-                }
+            $cartId = $request->input('id');
+            
+            if (!$cartId) {
+                return response()->json(['success' => false, 'message' => 'Invalid request']);
             }
             
-            return response()->json(['success' => false, 'message' => 'Item not found']);
+            $cart = session()->get('cart', []);
+            
+            if (!isset($cart[$cartId])) {
+                return response()->json(['success' => false, 'message' => 'Item not found']);
+            }
+            
+            unset($cart[$cartId]);
+            session()->put('cart', $cart);
+            
+            $total = $this->calculateCartTotal($cart);
+            $cartCount = $this->getCartItemCount($cart);
+            $cartEmpty = empty($cart);
+            
+            return response()->json([
+                'success' => true,
+                'total' => $total,
+                'cartCount' => $cartCount,
+                'cartEmpty' => $cartEmpty,
+                'itemCount' => count($cart)
+            ]);
             
         } catch (\Exception $e) {
-            Log::error('Remove Cart Error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false, 
-                'message' => 'An error occurred: ' . $e->getMessage()
-            ]);
+            Log::error('Remove Cart Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'An error occurred while removing item.']);
         }
     }
 
+    /**
+     * Get cart count (API)
+     */
+    public function getCartCount()
+    {
+        $cart = session()->get('cart', []);
+        return response()->json(['cartCount' => $this->getCartItemCount($cart)]);
+    }
+    public function getProductStockAPI($id, Request $request)
+    {
+        try {
+            $product = Product::findOrFail($id);
+            $size = strtoupper($request->input('size', 'M'));
+            
+            // Validate size
+            if (!$this->isValidSize($size)) {
+                return response()->json(['success' => false, 'message' => 'Invalid size'], 400);
+            }
+            
+            $stock = $this->getProductStock($product, $size);
+            $price = $this->getProductPrice($product);
+            
+            return response()->json([
+                'success' => true,
+                'stock' => $stock,
+                'price' => $price,
+                'size' => $size,
+                'available' => $stock > 0
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Get Stock Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Product not found'], 404);
+        }
+    }
     /**
      * Buy now - Add to cart and redirect to checkout
      */
     public function buy_now(Request $request, $id)
     {
-        $addToCartResponse = $this->add_to_cart($request, $id);
+        $response = $this->add_to_cart($request, $id);
         
         if (session()->has('error')) {
-            return $addToCartResponse;
+            return $response;
         }
         
         return redirect()->route('checkout_page');
     }
     
-    /**
-     * Helper method to get stock field name
-     */
+    //HELPER METHODS
+
+    private function isValidSize($size)
+    {
+        return in_array($size, ['S', 'M', 'L', 'XL', '2XL']);
+    }
+    
     private function getStockField($size)
     {
-        $normalized = strtolower($size);
-        return 'stock_' . $normalized;
+        return 'stock_' . strtolower($size);
+    }
+
+    private function getProductStock($product, $size)
+    {
+        $stockField = $this->getStockField($size);
+        return (int)($product->$stockField ?? 0);
+    }
+    
+    private function getProductPrice($product)
+    {
+        return ($product->discount_price && $product->discount_price > 0) 
+            ? $product->discount_price 
+            : $product->price;
+    }
+    
+    /**
+     * Calculate total cart value
+     */
+    private function calculateCartTotal($cart)
+    {
+        return array_reduce($cart, function($carry, $item) {
+            return $carry + ((float)$item['price'] * (int)$item['quantity']);
+        }, 0);
+    }
+    
+    private function validateAndUpdateCart($cart)
+    {
+        $productIds = array_column($cart, 'product_id');
+        $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
+        
+        foreach ($cart as $key => &$item) {
+            $product = $products[$item['product_id']] ?? null;
+            
+            if (!$product) {
+                unset($cart[$key]);
+                continue;
+            }
+            
+            $size = $item['size'] ?? 'M';
+            $currentStock = $this->getProductStock($product, $size);
+            
+            // Update item data
+            $item['current_stock'] = $currentStock;
+            $item['image'] = $product->image;
+            $item['price'] = $this->getProductPrice($product);
+
+            // Auto-adjust quantity if exceeds current stock
+            if ($item['quantity'] > $currentStock) {
+                $item['quantity'] = max(1, $currentStock);
+            }
+            
+            // Remove if out of stock
+            if ($currentStock <= 0) {
+                unset($cart[$key]);
+            }
+        }
+        
+        return $cart;
+    }
+    
+    private function respondError($message, $request)
+    {
+        return $request->expectsJson()
+            ? response()->json(['success' => false, 'message' => $message])
+            : redirect()->back()->with('error', $message);
+    }
+
+    private function getCartItemCount(array $cart)
+    {
+        $count = 0;
+        foreach ($cart as $item) {
+            $count += isset($item['quantity']) ? (int)$item['quantity'] : 0;
+        }
+        return $count;
     }
 }

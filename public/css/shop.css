@@ -3,9 +3,12 @@
     font-size: 1.5rem;
     font-weight: bold;
     color: var(--text-main);
-    margin: 2.5rem 1rem 0 1rem;
-    padding: 3.5rem 0 1rem 0;
+    margin: 2.5rem;
+    padding: 3.5rem;
     border-bottom: 1px solid var(--color-primary-muted);
+}
+.category {
+    text-align: center;
 }
 
 @media (min-width: 640px) {

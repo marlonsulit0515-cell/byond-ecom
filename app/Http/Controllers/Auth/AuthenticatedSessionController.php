@@ -35,7 +35,6 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required'],
         ]);
 
-        // Rate limiting - 5 attempts per minute per IP
         $key = 'login:' . $request->ip();
         
         if (RateLimiter::tooManyAttempts($key, 50)) {
@@ -50,7 +49,7 @@ class AuthenticatedSessionController extends Controller
 
         // Attempt authentication
         if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-            RateLimiter::hit($key, 60); // Lock for 60 seconds after 5 failed attempts
+            RateLimiter::hit($key, 60);
 
             return back()->withErrors([
                 'email' => 'The provided credentials do not match our records.',
