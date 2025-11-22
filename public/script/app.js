@@ -4,19 +4,49 @@
 let slideIndex = 0;
 const slides = document.querySelectorAll('.mySlides');
 const container = document.querySelector('.slideshow-container');
+const dots = document.querySelectorAll('.dot');
+let autoSlideTimeout;
 
-function showSlides() {
-    if (container && slides.length > 0) {
-        container.style.transform = `translateX(-${slideIndex * 100}%)`;
-        slideIndex++;
-        if (slideIndex >= slides.length) slideIndex = 0;
-        setTimeout(showSlides, 5000);
-    }
+// Show slide by index
+function updateSlide() {
+    container.style.transform = `translateX(-${slideIndex * 100}%)`;
+
+    dots.forEach(dot => dot.classList.remove('active'));
+    if (dots[slideIndex]) dots[slideIndex].classList.add('active');
 }
 
-if (slides.length > 0) {
-    showSlides();
+// Auto slide loop
+function autoSlide() {
+    slideIndex = (slideIndex + 1) % slides.length;
+    updateSlide();
+    autoSlideTimeout = setTimeout(autoSlide, 8000);
 }
+
+function manualSlide(index) {
+    clearTimeout(autoSlideTimeout);
+    slideIndex = index;
+    updateSlide();
+    autoSlideTimeout = setTimeout(autoSlide, 8000);
+}
+
+document.querySelector('.prev-btn').addEventListener('click', () => {
+    clearTimeout(autoSlideTimeout);
+    slideIndex = (slideIndex - 1 + slides.length) % slides.length;
+    updateSlide();
+    autoSlideTimeout = setTimeout(autoSlide, 8000);
+});
+
+document.querySelector('.next-btn').addEventListener('click', () => {
+    clearTimeout(autoSlideTimeout);
+    slideIndex = (slideIndex + 1) % slides.length;
+    updateSlide();
+    autoSlideTimeout = setTimeout(autoSlide, 8000);
+});
+
+// Start slideshow
+updateSlide();
+autoSlide();
+
 
 // ============================================
 // SCROLL ANIMATIONS (jQuery)

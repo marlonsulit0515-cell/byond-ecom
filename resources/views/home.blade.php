@@ -1,22 +1,34 @@
 @extends('layouts.default')
 @section('maincontent')
+
     <div class="slideshow">
         <div class="slideshow-container">
 
             <div class="mySlides slide">
-                <img loading="lazy" src="{{ asset('img/photos/SlideShow_1.webp') }}" alt="">
+                <img rel="preload" as="image" src="{{ asset('img/photos/slide3.webp') }}" alt="">
             </div>
 
             <div class="mySlides slide">
-                <img loading="lazy" src="{{ asset('img/photos/SlideImage.png') }}" alt="">
+                <img src="{{ asset('img/photos/slide2.webp') }}" alt="">
             </div>
+
             <div class="mySlides slide">
-                <img loading="lazy" src="{{ asset('img/photos/Slide3.jpg') }}" alt="">
+                <img src="{{ asset('img/photos/slide.webp') }}" alt="">
             </div>
-            
         </div>
-        
+
+        <!-- Manual navigation buttons -->
+        <button class="prev-btn">&#10094;</button>
+        <button class="next-btn">&#10095;</button>
+
+        <!-- Dots (optional) -->
+        <div class="dots">
+            <span class="dot" onclick="manualSlide(0)"></span>
+            <span class="dot" onclick="manualSlide(1)"></span>
+            <span class="dot" onclick="manualSlide(2)"></span>
+        </div>
     </div>
+
 
     <section class="content-container">
         <div class="content-border">

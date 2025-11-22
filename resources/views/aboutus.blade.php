@@ -67,53 +67,14 @@
                 </div>
             </div>
 
-            {{-- RIGHT SIDE IMAGE COLLAGE --}}
-            <div class="relative w-full h-[700px] mx-auto md:w-[675px] order-1 md:order-2 md:mb-0 mb-20 overflow-hidden" style="min-height: auto;">
-                
-                {{-- 1. Image 1 - Scattered Top Left (Polaroid style) --}}
-                <img class="number1img absolute hidden sm:block transition-transform duration-500 hover:scale-105" 
-                    src={{ asset('img/photos/Mockup_1.png') }}
-                    loading="lazy"
-                    style="margin: 3% 0% 0% 5%; width: 34%; height: auto; top: 0; left: 0; transform: rotate(-8deg); z-index: 4; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 8px solid white;">
-
-                {{-- 2. Image 2 - Overlapping Upper Center --}}
-                <img class="number2img absolute hidden sm:block transition-transform duration-500 hover:scale-105" 
-                    src={{ asset('img/model/model1.jpg') }}
-                    loading="lazy"
-                    style="margin: 10% 0% 0% 35%; width: 34%; height: auto; top: 0; left: 0; transform: rotate(4deg); z-index: 6; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 8px solid white;">
-
-                {{-- 3. Image 3 - Tucked Behind Left --}}
-                <img class="number3img absolute hidden sm:block transition-transform duration-500 hover:scale-105" 
-                   src={{ asset('img/photos/image1.png') }}
-                    loading="lazy"
-                    style="margin: 25% 0% 0% 2%; width: 34%; height: auto; top: 0; left: 0; transform: rotate(-3deg); z-index: 2; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 8px solid white;">
-
-                {{-- 4. Center Image - Hero Focal Point --}}
+        
+            <div class="relative w-full h-[700px] mx-auto md:w-[600px] order-1 md:order-2 md:mb-0 mb-20 overflow-hidden">
                 <img 
-                    class="number4vid absolute sm:relative md:absolute mx-auto transition-transform duration-500 hover:scale-105"
-                    src={{ asset('img/photos/image1.png') }}
-                    loading="lazy"
-                    style="margin: 32% 0% 0% 28%; width: 34%; height: auto; top: 0; left: 0; transform: rotate(-2deg); z-index: 7; box-shadow: 0 6px 16px rgba(0,0,0,0.4); border: 8px solid white;">
-
-                {{-- 5. Image 5 - Peeking Right Side --}}
-                <img class="number5img absolute hidden sm:block transition-transform duration-500 hover:scale-105" 
-                    src={{ asset('img/blog/BlogImg.png') }}
-                    loading="lazy"
-                    style="margin: 18% 0% 0% 62%; width: 34%; height: auto; top: 0; left: 0; transform: rotate(6deg); z-index: 3; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 8px solid white;">
-
-                {{-- 6. Image 6 - Bottom Scattered Left --}}
-                <img class="number6img absolute hidden sm:block transition-transform duration-500 hover:scale-105" 
-                    src={{ asset('img/photos/image1.jpg') }}
-                    loading="lazy"
-                    style="margin: 58% 0% 0% 8%; width: 34%; height: auto; top: 0; left: 0; transform: rotate(5deg); z-index: 5; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 8px solid white;">
-
-                {{-- 7. Image 7 - Bottom Right Layered --}}
-                <img class="number7img absolute hidden sm:block transition-transform duration-500 hover:scale-105" 
-                    src={{ asset('img/blog/BlogImg.png') }}
-                    loading="lazy"
-                    style="margin: 62% 0% 0% 56%; width: 34%; height: auto; top: 0; left: 0; transform: rotate(-4deg); z-index: 1; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 8px solid white;">
+                    class="about-us-img absolute hidden sm:block transition-transform duration-500 hover:scale-105 shadow-xl"
+                    src="{{ asset('img/photos/image.jpg') }}"
+                    loading="lazy">
             </div>
-            
+
         </div>
     </div>
 </section>

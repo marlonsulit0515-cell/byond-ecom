@@ -8,7 +8,7 @@
             <h2 class="text-2xl md:text-3xl lg:text-4xl font-semibold">CONTACT US</h2>
 
             <div class="direct-contact-list">
-                <p>For immediate assistance, general inquiries, or partnerships, please use one of the contact methods below. We aim to respond to all inquiries within 24-48 hours.</p>
+                <p class="content-text">For immediate assistance, or general inquiries, please use one of the contact methods below.</p>
 
                 <ul class="info-list">
                     <li>
@@ -53,30 +53,30 @@
                 <div class="faq-list">
                     <details class="faq-details">
                         <summary class="faq-summary">
-                            What is your return and exchange policy?
+                           How Long The Delivery Takes?
                         </summary>
-                        <p class="faq-content">We accept returns and exchanges within 30 days of purchase for items in their original condition (unworn, unwashed, with tags). Please visit our 'Shipping & Returns' page for detailed instructions.</p>
+                        <p class="faq-content">LBC usually take 2-7 days to deliver depending on the location. Please order in advance if you need the items as soon as possible.</p>
                     </details>
                     
                     <details class="faq-details">
                         <summary class="faq-summary">
-                            What shipping options are available and what are the costs?
+                            How can we return or exchange an item?
                         </summary>
-                        <p class="faq-content">We offer standard and express shipping nationwide. Standard shipping is free on all orders over ₱2,000. Costs vary based on your location and chosen speed; calculated at checkout.</p>
+                        <p class="faq-content">You can exchange or replace your item, though refund is not allowed. See more in our Return and Exchange Policy.</p>
                     </details>
 
                     <details class="faq-details">
                         <summary class="faq-summary">
                             How do I track my order?
                         </summary>
-                        <p class="faq-content">Once your order ships, you will receive an email confirmation with a tracking number and a link to the carrier's tracking portal.</p>
+                        <p class="faq-content">Once your order ships, you will receive an email confirmation with a tracking number and a link that you can use for the LBC order tracking. Just paste it to thier website to track your order. Or you can check in your user dashboard about the status of your order. </p>
                     </details>
 
                     <details class="faq-details">
                         <summary class="faq-summary">
                             What payment methods do you accept?
                         </summary>
-                        <p class="faq-content">We accept Visa, Mastercard, PayPal, and Gcash. Cash on Delivery (COD) is also available in select regions.</p>
+                        <p class="faq-content">PayPal, GCash and Maya through Xendit Gateway.</p>
                     </details>
                 </div>
             </div>

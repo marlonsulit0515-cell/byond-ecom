@@ -12,7 +12,7 @@
       <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
       <link href="https://fonts.cdnfonts.com/css/labor-union" rel="stylesheet">
       
-      <link rel="stylesheet"href="{{ asset('css/universal-style.css') }}" rel="stylesheet" /> {{-- Font Style,Size,Colors. --}}
+      <link href="{{ asset('css/universal-style.css') }}" rel="stylesheet" /> {{-- Font Style,Size,Colors. --}}
       <link href="{{ asset('css/screen-behavior.css') }}" rel="stylesheet" />
       <link href="{{ asset('css/pagination.css') }}" rel="stylesheet" />
 

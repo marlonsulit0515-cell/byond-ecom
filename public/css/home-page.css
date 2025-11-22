@@ -1,19 +1,24 @@
-/* Slideshow Section */
 .slideshow {
   width: 100%;
-  min-height: clamp(600px, 60vh, 700px);  
+  max-width: 2500px;
+  margin: 0 auto;
   overflow: hidden;
   position: relative;
+  aspect-ratio: 16 / 9;
+  max-height: 650px;
 }
 
 .slideshow-container {
   display: flex;
   width: 100%;
+  height: 100%;
   transition: transform 1s ease;
 }
 
 .mySlides {
   flex: 0 0 100%;
+  height: 100%;
+  position: relative;
 }
 
 .mySlides img {
@@ -23,68 +28,66 @@
   display: block;
 }
 
-.block {
-  height: 5em;
-  line-height: 5em;
-  width: 10em;
-  background: #464646;
-  color: #fdfdfd;
+.prev-btn, .next-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 20;
+  padding: 0;
+  line-height: 1;
+}
+
+.prev-btn:hover, .next-btn:hover {
+  transform: translateY(-50%) scale(1.1);
+}
+
+.prev-btn { 
+  left: 20px; 
+}
+
+.next-btn { 
+  right: 20px; 
+}
+
+.dots {
+  position: absolute;
+  bottom: 15px;
+  width: 100%;
   text-align: center;
-  margin: 1em auto;
-  text-shadow: 0 0 1px #333;
+  z-index: 20;
 }
 
-.animatable {
-  visibility: hidden;
-  animation-play-state: paused;
+.dot {
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  margin: 0 5px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s;
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
-.animated {
-  visibility: visible;
-  animation-fill-mode: both;
-  animation-duration: 3s;
-  animation-play-state: running;
+.dot.active {
+  background: #fff;
 }
 
-/* fadeInUp */
-@keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.about-us-img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
 }
 
-/* bounceInLeft */
-@keyframes bounceInLeft {
-  0% {
-    opacity: 0;
-    transform: translateX(-2000px);
-  }
-  60% {
-    transform: translateX(20px);
-  }
-  80% {
-    transform: translateX(-5px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.animated.fadeInUp {
-  animation-name: fadeInUp;
-}
-
-.animated.bounceInLeft {
-  animation-name: bounceInLeft;
-}
-
-/* Content Container */
 .content-container {
   margin: 0;
   padding: 0;
@@ -142,17 +145,6 @@
   transform: translateY(20px);
 }
 
-@keyframes aboutFadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .content-border .about a {
   color: #8b4513;
   text-decoration: underline;
@@ -163,7 +155,6 @@
   opacity: 0.7;
 }
 
-/* Image Collage Section - 2x2 Grid */
 .image-collage {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -233,7 +224,76 @@
   background: rgba(0, 0, 0, 0.5);
 }
 
-/* Tablet Landscape */
+.block {
+  height: 5em;
+  line-height: 5em;
+  width: 10em;
+  background: #464646;
+  color: #fdfdfd;
+  text-align: center;
+  margin: 1em auto;
+  text-shadow: 0 0 1px #333;
+}
+
+.animatable {
+  visibility: hidden;
+  animation-play-state: paused;
+}
+
+.animated {
+  visibility: visible;
+  animation-fill-mode: both;
+  animation-duration: 3s;
+  animation-play-state: running;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-2000px);
+  }
+  60% {
+    transform: translateX(20px);
+  }
+  80% {
+    transform: translateX(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes aboutFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animated.fadeInUp {
+  animation-name: fadeInUp;
+}
+
+.animated.bounceInLeft {
+  animation-name: bounceInLeft;
+}
+
 @media (max-width: 1024px) {
   .content-border .logo {
     min-width: clamp(120px, 20vw, 250px);
@@ -244,16 +304,43 @@
   }
 }
 
-/* Tablet Portrait & Mobile Landscape */
 @media (max-width: 768px) {
+  /* Mobile: Reduce width and maintain 16:9 */
   .slideshow {
-    min-height: clamp(150px, 30vh, 300px);
+    width: 100%; /* Significantly smaller width for mobile */
+    margin: 0 auto;
+    aspect-ratio: 16 / 9; /* Keep 16:9 ratio */
+    max-height: none;
   }
   
   .mySlides img {
-    height: clamp(150px, 30vh, 300px);
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Maintain cover for proper 16:9 display */
   }
-  
+
+  .about-us-img {
+    display: block !important;
+    position: relative;
+    width: 95%;
+    margin: 0 auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+  }
+
+  .prev-btn, .next-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+  }
+
+  .prev-btn { 
+    left: 12px; 
+  }
+
+  .next-btn { 
+    right: 12px; 
+  }
+
   .content-border {
     flex-direction: column;
     text-align: center;
@@ -297,16 +384,45 @@
   }
 }
 
-/* Mobile Portrait */
 @media (max-width: 480px) {
+  /* Smaller mobile: Even more compact width */
   .slideshow {
-    min-height: clamp(120px, 25vh, 250px);
+    width: 100%; /* More compact for smaller screens */
+    margin: 0 auto;
+    aspect-ratio: 16 / 9;
+    max-height: none;
   }
   
   .mySlides img {
-    height: clamp(120px, 25vh, 250px);
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
-  
+
+  .prev-btn, .next-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .prev-btn { 
+    left: 8px; 
+  }
+
+  .next-btn { 
+    right: 8px; 
+  }
+
+  .prev-btn:hover, .next-btn:hover {
+    transform: translateY(-50%) scale(1.05);
+  }
+
+  .dot {
+    height: 6px;
+    width: 6px;
+    margin: 0 3px;
+  }
+
   .content-border {
     padding: clamp(25px, 6vw, 40px) clamp(15px, 5vw, 30px);
     gap: 20px;
@@ -341,8 +457,35 @@
   }
 }
 
-/* Extra Small Mobile */
 @media (max-width: 360px) {
+  /* Very small screens: Most compact */
+  .slideshow {
+    width: 80%;
+    margin: 0 auto;
+    aspect-ratio: 16 / 9;
+    max-height: none;
+  }
+
+  .prev-btn, .next-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .prev-btn { 
+    left: 6px; 
+  }
+
+  .next-btn { 
+    right: 6px; 
+  }
+
+  .dot {
+    height: 5px;
+    width: 5px;
+    margin: 0 2px;
+  }
+
   .content-border .logo {
     min-width: clamp(130px, 55vw, 180px);
   }

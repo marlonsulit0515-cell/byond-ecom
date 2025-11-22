@@ -12,7 +12,7 @@
     --text-subtle: var(--color-secondary-dark);
     --text-nav: var(--color-secondary-white);
 
-    /* FONT FAMILIES */
+    /* FONT FAMILIES */ 
     --font-heading: 'Labor Union', sans-serif;
     --font-title: 'Montserrat SemiBold', sans-serif;
     --font-content: 'Montserrat Medium', sans-serif;
@@ -53,6 +53,10 @@
   p {
     font-size: var(--font-size-paragraph);
   }
+  .content-text {
+    font-size: 18px;
+  }
+
 
   .title {
     font-family: var(--font-title);
